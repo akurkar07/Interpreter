@@ -1,0 +1,20 @@
+PROGRAM Test;
+VAR
+  a, b, c : INTEGER;
+  x, y    : REAL;
+
+BEGIN
+  a := 2;
+  b := 10;
+  c := a + b * 3;
+
+  x := 3.14;
+  y := x + 2 * (b - a) / 4.0;
+
+  a := b DIV 3;
+
+  x := +5.0;
+  y := -x;
+
+  c := c - 1
+END.
