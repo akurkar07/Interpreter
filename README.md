@@ -1,6 +1,6 @@
 # TreeInterpreter3
 
-TreeInterpreter3 is a simple interpreter for a Pascal-like programming language. It takes in a program written in a specific grammar, tokenizes it, parses it into an Abstract Syntax Tree (AST), and evaluates the result. This project demonstrates the implementation of a lexer, parser, and interpreter for educational purposes.
+TreeInterpreter3 is a simple interpreter for a Pascal-like programming language. It takes in a program written in a specific grammar, tokenises it, parses it into an Abstract Syntax Tree (AST), and evaluates the result. This project demonstrates the implementation of a lexer, parser, and interpreter for educational purposes.
 
 ---
 
@@ -17,7 +17,7 @@ TreeInterpreter3 is a simple interpreter for a Pascal-like programming language.
 ## Project Structure
 
 - **`main.py`**: The entry point of the interpreter. Reads instructions from `instructions.txt` or user input and executes the program.
-- **`Lexer.py`**: Contains the `Lexer` class, which tokenizes the input text.
+- **`Lexer.py`**: Contains the `Lexer` class, which tokenises the input text.
 - **`Parser.py`**: Contains the `Parser` class, which parses tokens into an AST.
 - **`ASTNodes.py`**: Defines the various nodes used in the AST.
 - **`tokens.py`**: Defines token types, reserved keywords, and global scope. Also includes custom error classes.
@@ -118,7 +118,7 @@ This program demonstrates variable declarations, arithmetic operations, and assi
 
 The interpreter raises the following errors:
 
-- **`LexerError`**: Raised for invalid characters during tokenization.
+- **`LexerError`**: Raised for invalid characters during tokenisation.
 - **`ParserError`**: Raised for syntax errors during parsing.
 - **`InterpreterError`**: Raised for runtime errors during interpretation.
 
