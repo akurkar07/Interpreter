@@ -36,6 +36,9 @@ class Type():
     def __init__(self, token):
         self.token = token
         self.value = token.value
+    
+    def visit(self):
+        return self.value
 
 class Compound():
     """Represents a 'BEGIN ... END' block"""

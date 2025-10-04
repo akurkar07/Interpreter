@@ -202,6 +202,7 @@ class Parser(object):
             self.eat(INTEGER_CONST)
         elif token.type == REAL_CONST:
             node = RealNode(token.value)
+            self.eat(REAL_CONST)
         else:
             node = self.variable()
         return node
