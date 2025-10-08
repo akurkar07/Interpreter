@@ -3,6 +3,7 @@ from ASTNodes import *
 
 class Parser(object):
     """
+    The parser operates at the token level.
     The grammar is represented in the Parser's methods. The Parser turns text into an AST for the tree visit to evaluate\n
     Syntax errors come from here
     """
@@ -11,7 +12,7 @@ class Parser(object):
         self.current_token = self.lexer.get_next_token()
 
     def error(self):
-        raise ParserError(f'Invalid syntax at token {self.current_token}')
+        raise ParserError(f'Invalid token at position {self.lexer.pos}: {self.current_token}')
 
     def eat(self, token_type):
         if self.current_token.type == token_type:

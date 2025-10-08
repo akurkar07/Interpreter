@@ -6,7 +6,7 @@ from tokens import GLOBAL_SCOPE
 def main():
     readExternalInstructions = True
     while True:
-        #try:
+        try:
             if readExternalInstructions:
                 with open("instructions.txt", "r", encoding="utf-8") as f:
                     lines = f.readlines()
@@ -23,8 +23,8 @@ def main():
             result = AST.visit()
             print(result)
             print("GLOBAL_SCOPE:", GLOBAL_SCOPE)
-        #except (LexerError, ParserError, InterpreterError, NameError) as e:
-        #    print(f"Error: {e}")
+        except (LexerError, ParserError, InterpreterError, NameError) as e:
+            print(f"Error: {e}")
 
 if __name__ == '__main__':
     main()

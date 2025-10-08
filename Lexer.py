@@ -2,6 +2,7 @@ from tokens import *
 
 class Lexer(object):
     """
+    The lexer operates at the character level
     The lexer holds all the methods that handle the tokens and takes in the instructions when defined\n
     Invalid character errors come from here
     """

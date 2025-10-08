@@ -39,7 +39,7 @@ RESERVED_KEYWORDS = {
 }
 
 
-GLOBAL_SCOPE = {}
+GLOBAL_SCOPE = {} #Lookup table for values of vars
 
 # Custom error classes for robust error handling
 class LexerError(Exception):
