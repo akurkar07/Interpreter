@@ -17,6 +17,14 @@ class Token(object):
     def __repr__(self):
         return self.__str__()
     
+def typechecker(inpt):
+    intype = type(inpt)
+    if intype == int:
+        return INTEGER
+    elif intype == float:
+        return REAL
+    return None
+    
 RESERVED_KEYWORDS = {
     'PROGRAM': Token(PROGRAM, 'PROGRAM'),
     'VAR': Token(VAR, 'VAR'),
@@ -40,6 +48,8 @@ RESERVED_KEYWORDS = {
 
 
 GLOBAL_SCOPE = {} #Lookup table for values of vars
+
+SYMBOL_TABLE = {} #Lookup table for extra info on vars like type
 
 # Custom error classes for robust error handling
 class LexerError(Exception):

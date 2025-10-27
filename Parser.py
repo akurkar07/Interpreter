@@ -11,8 +11,14 @@ class Parser(object):
         self.lexer = lexer
         self.current_token = self.lexer.get_next_token()
 
+    def __str__(self):
+        return f"Parser | Current Token: {self.current_token}"
+    
+    def __repr__(self):
+        return self.__str__()
+
     def error(self):
-        raise ParserError(f'Invalid token at position {self.lexer.pos}: {self.current_token}')
+        raise ParserError(f'Invalid token at line {self.lexer.line}, position {self.lexer.pos%self.lexer.line}: {self.current_token}')
 
     def eat(self, token_type):
         if self.current_token.type == token_type:
@@ -37,7 +43,7 @@ class Parser(object):
 
     def declarations(self):
         """declarations : VAR (variable_declaration SEMI)+
-                        | empty
+                        \\| empty
         """
         declarations = []
         if self.current_token.type == VAR:
@@ -53,25 +59,27 @@ class Parser(object):
         var_nodes = [Var(self.current_token)]  # first ID
         self.eat(ID)
 
-        while self.current_token.type == COMMA:
+        while self.current_token.type == COMMA: # keeps receiving variables with commas
             self.eat(COMMA)
             var_nodes.append(Var(self.current_token))
             self.eat(ID)
 
         self.eat(COLON)
 
-        type_node = self.type_spec()
+        type_node = self.type_spec() # We determine their type
         var_declarations = [
-            VarDecl(var_node, type_node)
-            for var_node in var_nodes
+            VarDecl(var_node, type_node) for var_node in var_nodes
         ]
-        return var_declarations
+        return var_declarations # then return the list of var declarations with that type
     
     def type_spec(self):
-        """type_spec : INTEGER
-                    | REAL
         """
-        token = self.current_token
+        Returns the type bsed on the INTEGER or REAL after the colon
+
+        type_spec : INTEGER
+                    \\| REAL
+        """
+        token = self.current_token 
         if self.current_token.type == INTEGER:
             self.eat(INTEGER)
         else:
@@ -96,7 +104,7 @@ class Parser(object):
     def statement_list(self):
         """
         statement_list : statement
-                    | statement SEMI statement_list
+                    \\| statement SEMI statement_list
         """
         nodes = [self.statement()]
         while self.current_token.type == SEMI:

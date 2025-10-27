@@ -1,5 +1,19 @@
 from tokens import *
 
+# single character tokens map characters to token types rather than token objects
+SINGLE_CHARS = {
+    ';': SEMI,
+    '.': DOT,
+    '+': PLUS,
+    '-': MINUS,
+    '*': MUL,
+    '/': FLOAT_DIV,
+    '(': LPAREN,
+    ')': RPAREN,
+    ',': COMMA,
+    ':': COLON
+}
+
 class Lexer(object):
     """
     The lexer operates at the character level
@@ -9,13 +23,23 @@ class Lexer(object):
     def __init__(self, text):
         self.text = text
         self.pos = 0
+        self.line = 1
         self.current_char = self.text[self.pos] if self.text else None
 
+    def __str__(self):
+        return f"Lexer | Current Position: {self.pos} | Current Character: {self.current_char}"
+
+    def __repr__(self):
+        return self.__str__()
+
     def error(self):
-        raise LexerError(f'Invalid character at position {self.pos}: {self.current_char}')
+        raise LexerError(f'Invalid character at line {self.line}, position {self.pos%self.line}: {self.current_char}')
 
     def advance(self):
-        # Move position forward and update current_char
+        """Move position forward and update current_char\n
+        Also increments line counter per newline"""
+        if self.current_char == "\n":
+            self.line += 1
         self.pos += 1
         if self.pos >= len(self.text):
             self.current_char = None
@@ -23,6 +47,7 @@ class Lexer(object):
             self.current_char = self.text[self.pos]
 
     def skip_whitespace(self):
+        "Skips spaces, tabs and newlines and carriage returns"
         while self.current_char is not None and self.current_char.isspace():
             self.advance()
 
@@ -77,53 +102,20 @@ class Lexer(object):
             if self.current_char.isalpha() or self.current_char == '_': #
                 return self._id()
             
+            if self.current_char.isdigit():
+                return self.number()  
+                      
             if self.current_char == ':' and self.peek() == '=':
                 self.advance()
                 self.advance()
                 return Token(ASSIGN, ':=')
-
-            if self.current_char == ';':
-                self.advance()
-                return Token(SEMI, ';')
-
-            if self.current_char == '.':
-                self.advance()
-                return Token(DOT, '.')
-
-            if self.current_char.isdigit():
-                return self.number()
-
-            if self.current_char == '+':
-                self.advance()
-                return Token(PLUS, '+')
-
-            if self.current_char == '-':
-                self.advance()
-                return Token(MINUS, '-')
             
-            if self.current_char == '*':
+            #Gets the token type of the current char
+            token_type = SINGLE_CHARS.get(self.current_char)
+            if token_type is not None:
+                char = self.current_char
                 self.advance()
-                return Token(MUL, '*')
-            
-            if self.current_char == '/':
-                self.advance()
-                return Token(FLOAT_DIV, '/')
-            
-            if self.current_char == '(':
-                self.advance()
-                return Token(LPAREN, '(')
-            
-            if self.current_char == ')':
-                self.advance()
-                return Token(RPAREN, ')')
-            
-            if self.current_char == ',':
-                self.advance()
-                return Token(COMMA, ',')
-            
-            if self.current_char == ':':
-                self.advance()
-                return Token(COLON, ':')
+                return Token(token_type, char)   # Returns a fresh token each time
 
             self.error()
 
