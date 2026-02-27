@@ -1,5 +1,5 @@
 from tokens import *
-from ASTNodes import *
+from interpreter import *
 
 class Parser(object):
     """
@@ -18,7 +18,7 @@ class Parser(object):
         return self.__str__()
 
     def error(self):
-        raise ParserError(f'Invalid token at line {self.lexer.line}, position {self.lexer.pos%self.lexer.line}: {self.current_token}')
+        raise ParserError(f'Invalid token at line {self.lexer.line}, position {self.lexer.column}: {self.current_token}')
 
     def eat(self, token_type):
         if self.current_token.type == token_type:
@@ -31,9 +31,9 @@ class Parser(object):
         self.eat(PROGRAM)
         program_name = self.variable()
         self.eat(SEMI)
-        result = self.block()
+        block_node = self.block()
         self.eat(DOT)
-        return result
+        return Program(program_name, block_node)
 
     def block(self):
         "block : declarations compound_statement"
@@ -155,19 +155,19 @@ class Parser(object):
         """
         Returns an value from the result of the +/- arithmetic expressions
 
-        expr: term((PLUS/MINUS)term)*"""
+        expr: term((PLUS|MINUS)term)*
+        """
         node = self.term()
 
         while self.current_token.type in (PLUS, MINUS):
             op = self.current_token
             if op.type == PLUS:
                 self.eat(PLUS)
-                right = self.term()
-                node = BinaryOperation("+", node, right)
             elif op.type == MINUS:
                 self.eat(MINUS)
-                right = self.term()
-                node = BinaryOperation("-", node, right)
+
+            right = self.term()
+            node = BinaryOperation(op.type, node, right)
         return node
     
     # parser term precedence
@@ -176,14 +176,14 @@ class Parser(object):
         while self.current_token.type in (MUL, FLOAT_DIV, INTEGER_DIV):
             op = self.current_token
             if op.type == MUL:
-                self.eat(MUL); right = self.factor()
-                node = BinaryOperation('*', node, right)
+                self.eat(MUL) 
             elif op.type == FLOAT_DIV:
-                self.eat(FLOAT_DIV); right = self.factor()
-                node = BinaryOperation('/', node, right)
+                self.eat(FLOAT_DIV) 
             elif op.type == INTEGER_DIV:
-                self.eat(INTEGER_DIV); right = self.factor()
-                node = BinaryOperation('div', node, right)
+                self.eat(INTEGER_DIV) 
+
+            right = self.factor()
+            node = BinaryOperation(op.type, node, right)
         return node
 
     
@@ -201,17 +201,18 @@ class Parser(object):
         if token.type in (PLUS, MINUS):
             self.eat(token.type)                       # consume the unary operator
             child = self.factor()                      # then parse the operand
-            return UnaryOperation(token.value, child)
+            return UnaryOperation(token.type, child)
+        
         elif token.type == LPAREN:
             self.eat(LPAREN)
             node = self.expr()
             self.eat(RPAREN)
         elif token.type == INTEGER_CONST:
-            node = IntegerNode(token.value)
             self.eat(INTEGER_CONST)
+            node = IntegerNode(token.value)
         elif token.type == REAL_CONST:
-            node = RealNode(token.value)
             self.eat(REAL_CONST)
+            node = RealNode(token.value)
         else:
             node = self.variable()
         return node

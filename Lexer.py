@@ -22,6 +22,7 @@ class Lexer(object):
     """
     def __init__(self, text):
         self.text = text
+        self.column = 0
         self.pos = 0
         self.line = 1
         self.current_char = self.text[self.pos] if self.text else None
@@ -33,13 +34,16 @@ class Lexer(object):
         return self.__str__()
 
     def error(self):
-        raise LexerError(f'Invalid character at line {self.line}, position {self.pos%self.line}: {self.current_char}')
+        raise LexerError(f'Invalid character at line {self.line}, position {self.column}: {self.current_char}')
 
     def advance(self):
         """Move position forward and update current_char\n
         Also increments line counter per newline"""
         if self.current_char == "\n":
             self.line += 1
+            self.column = 0
+        else:
+            self.column += 1
         self.pos += 1
         if self.pos >= len(self.text):
             self.current_char = None
@@ -47,7 +51,7 @@ class Lexer(object):
             self.current_char = self.text[self.pos]
 
     def skip_whitespace(self):
-        "Skips spaces, tabs and newlines and carriage returns"
+        "Skips spaces, tabs, newlines and carriage returns"
         while self.current_char is not None and self.current_char.isspace():
             self.advance()
 
@@ -99,7 +103,7 @@ class Lexer(object):
                 self.skip_comment()
                 continue
 
-            if self.current_char.isalpha() or self.current_char == '_': #
+            if self.current_char.isalpha() or self.current_char == '_':
                 return self._id()
             
             if self.current_char.isdigit():
