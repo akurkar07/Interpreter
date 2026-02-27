@@ -1,7 +1,10 @@
 from interpreter import *
 
 class SemanticAnalyser(NodeVisitor):
-    """Checks types and populates symbol table"""
+    """
+    The semantic analyser checks types and populates the symbol table before the AST is passed to the interpreter to be run.\n
+    The methods in the semantic analyser are mostly concerned with types.\n
+    """
     def __init__(self):
         self.symtab = SymbolTable()
         self.integer_type = self.symtab.lookup(INTEGER)

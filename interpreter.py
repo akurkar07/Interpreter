@@ -56,17 +56,19 @@ class NodeVisitor():
     
 class Interpreter(NodeVisitor):
     """Base visitor class, not used directly but can be inherited from for more complex visitors"""
-    
+    def __init__(self):
+        self.GLOBAL_SCOPE = {}
+        
     def visit_Assign(self,node):
         var_name = node.left.name
         val = self.visit(node.right)
-        GLOBAL_SCOPE[var_name] = val
+        self.GLOBAL_SCOPE[var_name] = val
         return val
 
     def visit_Var(self,node):
-        if node.name not in GLOBAL_SCOPE:
+        if node.name not in self.GLOBAL_SCOPE:
             raise InterpreterError(f"Variable {node.name} is not defined")
-        return GLOBAL_SCOPE[node.name]
+        return self.GLOBAL_SCOPE[node.name]
 
     def visit_BinaryOperation(self,node):
         leftvalue = self.visit(node.left)

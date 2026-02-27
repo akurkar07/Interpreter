@@ -1,3 +1,7 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# VS Code
+.vscode/
 *.code-workspace
-vscode/
-_pycache_/

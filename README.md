@@ -1,36 +1,34 @@
-# TreeInterpreter3
+# Interpreter
 
-TreeInterpreter3 is a simple interpreter for a Pascal-like programming language. It takes in a program written in a specific grammar, tokenises it, parses it into an Abstract Syntax Tree (AST), and evaluates the result. This project demonstrates the implementation of a lexer, parser, and interpreter for educational purposes.
+A small Pascal-like interpreter built as a learning project.
 
----
+Current pipeline:
 
-## Features
+`source text -> Lexer -> Parser -> AST -> SemanticAnalyser -> Interpreter`
 
-- **Lexer**: Converts the input text into tokens.
-- **Parser**: Converts tokens into an Abstract Syntax Tree (AST) based on the defined grammar.
-- **Interpreter**: Evaluates the AST and executes the program.
-- **Error Handling**: Handles syntax and lexical errors gracefully.
-- **Global Scope**: Stores variables and their values during execution.
+## Current Features
 
----
+- Lexer for Pascal-like tokens (`PROGRAM`, `VAR`, `BEGIN/END`, arithmetic ops, assignment, literals, identifiers)
+- Recursive-descent parser that builds an AST
+- AST node model in `nodes.py`
+- Visitor-based execution (`NodeVisitor` + `Interpreter`)
+- Semantic pass (`SemanticAnalyser`) with symbol table population, duplicate declaration checks, undeclared variable checks, assignment compatibility checks, and numeric operator checks
 
 ## Project Structure
 
-- **`main.py`**: The entry point of the interpreter. Reads instructions from `instructions.txt` or user input and executes the program.
-- **`Lexer.py`**: Contains the `Lexer` class, which tokenises the input text.
-- **`Parser.py`**: Contains the `Parser` class, which parses tokens into an AST.
-- **`ASTNodes.py`**: Defines the various nodes used in the AST.
-- **`tokens.py`**: Defines token types, reserved keywords, and global scope. Also includes custom error classes.
-- **`instructions.txt`**: A sample program written in the supported grammar.
-- **`grammar.txt`**: The formal grammar definition for the language.
+- `main.py`: entry point and REPL loop
+- `Lexer.py`: lexical analysis
+- `Parser.py`: AST construction from tokens
+- `nodes.py`: AST node classes
+- `interpreter.py`: base visitor and runtime interpreter
+- `SemanticAnalyser.py`: semantic checks + symbol table population
+- `tokens.py`: token constants, token class, symbol classes/table, and custom exceptions
+- `grammar.txt`: grammar notes
+- `instructions.txt`: sample input program loaded on first run
 
----
+## Grammar (Implemented)
 
-## Grammar
-
-The interpreter supports the following grammar:
-
-```
+```text
 program : PROGRAM variable SEMI block DOT
 
 block : declarations compound_statement
@@ -66,66 +64,46 @@ factor : PLUS factor
        | LPAREN expr RPAREN
        | variable
 
-variable: ID
+variable : ID
 ```
 
----
+Note: standalone expression statements like `1+1` are not valid in this grammar.
 
-## How to Run
+## Running
 
-1. Clone the repository or download the project files.
-2. Ensure you have Python 3 installed.
-3. Run the interpreter:
-   ```bash
-   python main.py
-   ```
-4. The interpreter will execute the program in `instructions.txt` by default. Alternatively, you can enter instructions interactively.
+1. Use Python 3.
+2. From the project folder:
 
----
-
-## Example Program
-
-The following program is included in `instructions.txt`:
-
-```pascal
-PROGRAM Test;
-VAR
-  a, b, c : INTEGER;
-  x, y    : REAL;
-
-BEGIN
-  a := 2;
-  b := 10;
-  c := a + b * 3;
-
-  x := 3.14;
-  y := x + 2 * (b - a) / 4.0;
-
-  a := b DIV 3;
-
-  x := +5.0;
-  y := -x;
-
-  c := c - 1
-END.
+```bash
+python main.py
 ```
 
-This program demonstrates variable declarations, arithmetic operations, and assignments.
+Behavior:
 
----
+- First run executes `instructions.txt`
+- Then it switches to interactive input
+- Type `:q` to quit
 
-## Error Handling
+## Semantic Rules Currently Enforced
 
-The interpreter raises the following errors:
+- Variables must be declared before use
+- Duplicate variable declarations are rejected
+- `DIV` requires `INTEGER` operands
+- `/` (`FLOAT_DIV`) yields `REAL`
+- `+`, `-`, `*` yield `INTEGER` only when both operands are `INTEGER`, otherwise `REAL`
+- Assignments allow exact type match and widening `INTEGER -> REAL`
 
-- **`LexerError`**: Raised for invalid characters during tokenisation.
-- **`ParserError`**: Raised for syntax errors during parsing.
-- **`InterpreterError`**: Raised for runtime errors during interpretation.
+## Errors
 
----
+The project currently uses:
 
-## License
+- `LexerError`
+- `ParserError`
+- `InterpreterError` (also used by semantic analysis at the moment)
 
-This project is for educational purposes and is not licensed for commercial use. Feel free to explore and modify the code for learning.
+## Current Limitations
 
----
+- No procedures/functions yet
+- No nested scopes yet
+- No booleans/relational operators yetV
+- Semantic errors are not split into a dedicated `SemanticError` type yet

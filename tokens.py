@@ -70,21 +70,8 @@ RESERVED_KEYWORDS = {
     'END': Token(END, 'END'),
     'INTEGER': Token(INTEGER, 'INTEGER'),
     'REAL': Token(REAL, 'REAL'),
-    'DIV': Token(INTEGER_DIV, 'DIV'),
-    ':=': Token(ASSIGN, ':='),
-    ';': Token(SEMI, ';'),
-    '.': Token(DOT, '.'),
-    '+': Token(PLUS, '+'),
-    '-': Token(MINUS, '-'),
-    '*': Token(MUL, '*'),
-    '/': Token(FLOAT_DIV, '/'),
-    '(': Token(LPAREN, '('),
-    ')': Token(RPAREN, ')'),
-    ',': Token(COMMA, ','),
-    ':': Token(COLON, ':')
+    'DIV': Token(INTEGER_DIV, 'DIV')
 }
-
-GLOBAL_SCOPE = {} #Lookup table for values of vars
 
 # Custom error classes for robust error handling
 class LexerError(Exception):

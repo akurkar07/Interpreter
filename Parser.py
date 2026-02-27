@@ -3,8 +3,9 @@ from interpreter import *
 
 class Parser(object):
     """
-    The parser operates at the token level.
-    The grammar is represented in the Parser's methods. The Parser turns text into an AST for the tree visit to evaluate\n
+    The parser operates at the token level.\n
+    The grammar is represented in the Parser's methods. The Parser turns text into an AST for the semantic analyser visit\n
+    Each method in the parser is responsible for turning a sequence of tokens into a node in the AST\n
     Syntax errors come from here
     """
     def __init__(self,lexer):

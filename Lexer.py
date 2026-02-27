@@ -16,8 +16,8 @@ SINGLE_CHARS = {
 
 class Lexer(object):
     """
-    The lexer operates at the character level
-    The lexer holds all the methods that handle the tokens and takes in the instructions when defined\n
+    The lexer operates at the character level\n
+    The lexer is responsible for turning sequences of characters from the original text into tokens for the parser\n
     Invalid character errors come from here
     """
     def __init__(self, text):

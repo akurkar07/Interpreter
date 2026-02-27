@@ -1,38 +1,69 @@
-from interpreter import Interpreter
-from SemanticAnalyser import SemanticAnalyser
-from tokens import GLOBAL_SCOPE, LexerError, ParserError, InterpreterError
+import sys
+
+from tokens import LexerError, ParserError, InterpreterError
 from Lexer import Lexer
 from Parser import Parser
+from SemanticAnalyser import SemanticAnalyser
+from interpreter import Interpreter
+
+
+def run_script(path):
+    with open(path, "r", encoding="utf-8") as instruction_file:
+        text = instruction_file.read()
+
+    lexer = Lexer(text)
+    parser = Parser(lexer)
+    ast = parser.parse()
+    print(f"Running {ast.name.name}...")
+
+    sem_analyser = SemanticAnalyser()
+    sem_analyser.visit(ast)
+
+    interpreter = Interpreter()
+    interpreter.visit(ast)
+
+    print("GLOBAL_SCOPE:", interpreter.GLOBAL_SCOPE)
+    print("SYMBOL_TABLE:", sem_analyser.symtab)
+
+
+def parse_command(raw):
+    command = raw.strip()
+    if not command:
+        return None, None
+    if command == ":q":
+        return "quit", None
+    if command.startswith(":run "):
+        path = command[5:].strip()
+        return ("run", path) if path else (None, None)
+    return "run", command
+
 
 def main():
-    readExternalInstructions = True
-    while True:
-        try:
-            if readExternalInstructions: # Runs the instructions file first then forms a CLI
-                with open("instructions.txt", "r", encoding="utf-8") as instructionFile:
-                    lines = instructionFile.readlines()
-                    text = "".join(lines)
-                readExternalInstructions = False
-            else:
-                text = input("> ")
-                if text == ":q":
-                    print("Quitting")
-                    quit()
-            lexer = Lexer(text)                         # Creates a lexer object with the input text
-            parser = Parser(lexer)                      # Creates a parser with the lexer
-            AST = parser.parse()                        # Parses the input and returns the root of the AST
-            print(f"Running {AST.name.name}...")        # Prints the name of the procedure being run (TEMPORARY)
-            
-            semAnalyser = SemanticAnalyser()
-            semAnalyser.visit(AST)
+    print("Alex's PascalInterpreter")
 
-            interpreter = Interpreter()                     # Creates a visitor object
-            result = interpreter.visit(AST)                 # Visits the AST and returns the result of the program              
-            
-            print("GLOBAL_SCOPE:", GLOBAL_SCOPE)
-            print("SYMBOL_TABLE:", semAnalyser.symtab)
+    pending_path = sys.argv[1] if len(sys.argv) > 1 else None
+
+    while True:
+        if pending_path is None:
+            raw = input("script> ")
+            action, path = parse_command(raw)
+
+            if action is None:
+                continue
+            if action == "quit":
+                print("Quitting")
+                return
+            pending_path = path
+
+        try:
+            run_script(pending_path)
         except (LexerError, ParserError, InterpreterError) as e:
             print(f"Error: {e}")
+        except OSError as e:
+            print(f"Error reading '{pending_path}': {e}")
+        finally:
+            pending_path = None
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
