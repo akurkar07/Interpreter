@@ -26,10 +26,20 @@ def run_script(path):
     print("SYMBOL_TABLE:", sem_analyser.symtab)
 
 
+def print_help():
+    print("Commands:")
+    print("  :help                Show this help message")
+    print("  :q                   Quit")
+    print("  :run <path>          Run a Pascal script file")
+    print("  <path>               Run a Pascal script file")
+
+
 def parse_command(raw):
     command = raw.strip()
     if not command:
         return None, None
+    if command == ":help":
+        return "help", None
     if command == ":q":
         return "quit", None
     if command.startswith(":run "):
@@ -39,16 +49,19 @@ def parse_command(raw):
 
 
 def main():
-    print("Alex's PascalInterpreter")
+    print("="*24 + "\nAlex's PascalInterpreter\n" + "="*24)
 
     pending_path = sys.argv[1] if len(sys.argv) > 1 else None
 
     while True:
         if pending_path is None:
-            raw = input("script> ")
+            raw = input("\nscript> ")
             action, path = parse_command(raw)
 
             if action is None:
+                continue
+            if action == "help":
+                print_help()
                 continue
             if action == "quit":
                 print("Quitting")

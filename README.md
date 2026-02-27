@@ -13,18 +13,20 @@ Current pipeline:
 - AST node model in `nodes.py`
 - Visitor-based execution (`NodeVisitor` + `Interpreter`)
 - Semantic pass (`SemanticAnalyser`) with symbol table population, duplicate declaration checks, undeclared variable checks, assignment compatibility checks, and numeric operator checks
+- Script runner supports startup file arguments and interactive `:run <path>` execution
 
 ## Project Structure
 
-- `main.py`: entry point and REPL loop
-- `Lexer.py`: lexical analysis
-- `Parser.py`: AST construction from tokens
-- `nodes.py`: AST node classes
-- `interpreter.py`: base visitor and runtime interpreter
-- `SemanticAnalyser.py`: semantic checks + symbol table population
-- `tokens.py`: token constants, token class, symbol classes/table, and custom exceptions
+- `src/main.py`: entry point and script command loop
+- `src/Lexer.py`: lexical analysis
+- `src/Parser.py`: AST construction from tokens
+- `src/nodes.py`: AST node classes
+- `src/interpreter.py`: base visitor and runtime interpreter
+- `src/SemanticAnalyser.py`: semantic checks + symbol table population
+- `src/tokens.py`: token constants, token class, symbol classes/table, and custom exceptions
 - `grammar.txt`: grammar notes
-- `instructions.txt`: sample input program loaded on first run
+- `instructions/instructions.txt`: sample input program
+- `instructions/a.pas`: additional sample script
 
 ## Grammar (Implemented)
 
@@ -75,13 +77,29 @@ Note: standalone expression statements like `1+1` are not valid in this grammar.
 2. From the project folder:
 
 ```bash
-python main.py
+python src/main.py
 ```
 
 Behavior:
 
-- First run executes `instructions.txt`
-- Then it switches to interactive input
+- Pass a script path as an argument to run immediately:
+
+```bash
+python src/main.py instructions/instructions.txt
+```
+
+- Or start interactive mode and run scripts by path:
+
+```text
+script> :run instructions/instructions.txt
+```
+
+- You can also type a path directly at the prompt:
+
+```text
+script> instructions/a.pas
+```
+
 - Type `:q` to quit
 
 ## Semantic Rules Currently Enforced
@@ -105,5 +123,5 @@ The project currently uses:
 
 - No procedures/functions yet
 - No nested scopes yet
-- No booleans/relational operators yetV
+- No booleans/relational operators yet
 - Semantic errors are not split into a dedicated `SemanticError` type yet
