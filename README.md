@@ -2,6 +2,11 @@
 
 A small Pascal-like interpreter built as a learning project.
 
+Helpful docs:
+
+- [Grammar guide](GRAMMAR_GUIDE.md)
+- [Grammar reference](grammar.txt)
+
 Current pipeline:
 
 `source text -> Lexer -> Parser -> AST -> SemanticAnalyser -> Interpreter`
@@ -17,18 +22,21 @@ Current pipeline:
 
 ## Project Structure
 
-- `src/main.py`: entry point and script command loop
-- `src/Lexer.py`: lexical analysis
-- `src/Parser.py`: AST construction from tokens
-- `src/nodes.py`: AST node classes
-- `src/interpreter.py`: base visitor and runtime interpreter
-- `src/SemanticAnalyser.py`: semantic checks + symbol table population
-- `src/tokens.py`: token constants, token class, symbol classes/table, and custom exceptions
-- `grammar.txt`: grammar notes
+- [`src/main.py`](src/main.py): entry point and script command loop
+- [`src/Lexer.py`](src/Lexer.py): lexical analysis
+- [`src/Parser.py`](src/Parser.py): AST construction from tokens
+- [`src/nodes.py`](src/nodes.py): AST node classes
+- [`src/interpreter.py`](src/interpreter.py): base visitor and runtime interpreter
+- [`src/SemanticAnalyser.py`](src/SemanticAnalyser.py): semantic checks + symbol table population
+- [`src/tokens.py`](src/tokens.py): token constants, token class, symbol classes/table, and custom exceptions
+- [`grammar.txt`](grammar.txt): grammar notes
+- [`GRAMMAR_GUIDE.md`](GRAMMAR_GUIDE.md): short guide to reading the grammar notation
 - `instructions/instructions.txt`: sample input program
 - `instructions/a.pas`: additional sample script
 
 ## Grammar (Implemented)
+
+See [`grammar.txt`](grammar.txt) for the standalone grammar file and [`GRAMMAR_GUIDE.md`](GRAMMAR_GUIDE.md) for notation help.
 
 ```text
 program : PROGRAM variable SEMI block DOT
@@ -40,7 +48,9 @@ declarations : VAR (variable_declaration SEMI)+
 
 variable_declaration : ID (COMMA ID)* COLON type_spec
 
-type_spec : INTEGER | REAL
+type_spec : INTEGER
+          | REAL
+          | BOOLEAN
 
 compound_statement : BEGIN statement_list END
 
@@ -51,11 +61,18 @@ statement : compound_statement
           | assignment_statement
           | empty
 
-assignment_statement : variable ASSIGN expr
+assignment_statement : variable ASSIGN expression
 
 empty :
 
-expr : term ((PLUS | MINUS) term)*
+expression : arithmetic_expr ((EQUAL
+                             | NOT_EQUAL
+                             | LESS_THAN
+                             | LESS_EQUAL
+                             | GREATER_THAN
+                             | GREATER_EQUAL) arithmetic_expr)?
+
+arithmetic_expr : term ((PLUS | MINUS) term)*
 
 term : factor ((MUL | INTEGER_DIV | FLOAT_DIV) factor)*
 
@@ -63,7 +80,8 @@ factor : PLUS factor
        | MINUS factor
        | INTEGER_CONST
        | REAL_CONST
-       | LPAREN expr RPAREN
+       | BOOLEAN_CONST
+       | LPAREN expression RPAREN
        | variable
 
 variable : ID
@@ -123,5 +141,4 @@ The project currently uses:
 
 - No procedures/functions yet
 - No nested scopes yet
-- No booleans/relational operators yet
 - Semantic errors are not split into a dedicated `SemanticError` type yet

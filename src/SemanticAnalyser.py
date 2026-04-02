@@ -9,6 +9,7 @@ class SemanticAnalyser(NodeVisitor):
         self.symtab = SymbolTable()
         self.integer_type = self.symtab.lookup(INTEGER)
         self.real_type = self.symtab.lookup(REAL)
+        self.boolean_type = self.symtab.lookup(BOOLEAN)
 
     def _is_numeric(self, type_symbol):
         return type_symbol in (self.integer_type, self.real_type)
@@ -41,26 +42,45 @@ class SemanticAnalyser(NodeVisitor):
 
     def visit_RealNode(self,node):
         return self.real_type
+    
+    def visit_BooleanNode(self,node):
+        return self.boolean_type
 
     def visit_BinaryOperation(self, node):
         left_type = self.visit(node.left)
         right_type = self.visit(node.right)
+        arithmetic_ops = (PLUS, MINUS, MUL, FLOAT_DIV, INTEGER_DIV)
+        comparison_ops = (
+            EQUAL,
+            NOT_EQUAL,
+            LESS_THAN,
+            LESS_EQUAL,
+            GREATER_THAN,
+            GREATER_EQUAL,
+        )
 
-        if not (self._is_numeric(left_type) and self._is_numeric(right_type)):
-            raise InterpreterError(f"Type Error: invalid operands for {node.value}: {left_type}, {right_type}")
+        if node.value in arithmetic_ops:
+            if not (self._is_numeric(left_type) and self._is_numeric(right_type)):
+                raise InterpreterError(f"Type Error: invalid operands for {node.value}: {left_type}, {right_type}")
 
-        if node.value == INTEGER_DIV:
-            if left_type != self.integer_type or right_type != self.integer_type:
-                raise InterpreterError("Type Error: DIV requires INTEGER operands")
-            return self.integer_type
+            if node.value == INTEGER_DIV:
+                if left_type != self.integer_type or right_type != self.integer_type:
+                    raise InterpreterError("Type Error: DIV requires INTEGER operands")
+                return self.integer_type
 
-        if node.value == FLOAT_DIV:
+            if node.value == FLOAT_DIV:
+                return self.real_type
+
+            if left_type == self.integer_type and right_type == self.integer_type:
+                return self.integer_type
             return self.real_type
 
-        # +, -, * : INTEGER only stays INTEGER, otherwise promote to REAL
-        if left_type == self.integer_type and right_type == self.integer_type:
-            return self.integer_type
-        return self.real_type
+        if node.value in comparison_ops:
+            if not (self._is_numeric(left_type) and self._is_numeric(right_type)):
+                raise InterpreterError(f"Type Error: invalid operands for {node.value}: {left_type}, {right_type}")
+            return self.boolean_type
+
+        raise InterpreterError(f"Unknown binary operator {node.value}")
 
     def visit_UnaryOperation(self, node):
         child_type = self.visit(node.child)

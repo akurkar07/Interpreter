@@ -1,7 +1,9 @@
-INTEGER, REAL, INTEGER_CONST, REAL_CONST, PLUS, MINUS, MUL, FLOAT_DIV, INTEGER_DIV,\
-LPAREN, RPAREN, BEGIN, END, DOT, ID, ASSIGN, SEMI, COMMA, COLON, VAR, PROGRAM, EOF =\
-'INTEGER', 'REAL', 'INTEGER_CONST', 'REAL_CONST', 'PLUS', 'MINUS', 'MUL', 'FLOAT_DIV', 'INTEGER_DIV',\
-'LPAREN', 'RPAREN', 'BEGIN', 'END', 'DOT', 'ID', 'ASSIGN', 'SEMI', 'COMMA', 'COLON', 'VAR', 'PROGRAM', 'EOF'
+INTEGER, REAL, BOOLEAN, INTEGER_CONST, REAL_CONST, BOOLEAN_CONST, PLUS, MINUS, MUL, FLOAT_DIV, INTEGER_DIV, \
+LPAREN, RPAREN, BEGIN, END, DOT, ID, ASSIGN, SEMI, COMMA, COLON, VAR, PROGRAM, \
+EQUAL, NOT_EQUAL, LESS_THAN, LESS_EQUAL, GREATER_THAN, GREATER_EQUAL, TRUE, FALSE, EOF = \
+'INTEGER', 'REAL', 'BOOLEAN', 'INTEGER_CONST', 'REAL_CONST', 'BOOLEAN_CONST', 'PLUS', 'MINUS', 'MUL', 'FLOAT_DIV', 'INTEGER_DIV', \
+'LPAREN', 'RPAREN', 'BEGIN', 'END', 'DOT', 'ID', 'ASSIGN', 'SEMI', 'COMMA', 'COLON', 'VAR', 'PROGRAM', \
+'EQUAL', 'NOT_EQUAL', 'LESS_THAN', 'LESS_EQUAL', 'GREATER_THAN', 'GREATER_EQUAL', 'TRUE', 'FALSE', 'EOF'
 
 class Token(object):
     """
@@ -48,6 +50,7 @@ class SymbolTable(object):
     def _init_builtins(self):
         self.define(BuiltinTypeSymbol('INTEGER'))
         self.define(BuiltinTypeSymbol('REAL'))
+        self.define(BuiltinTypeSymbol('BOOLEAN'))
 
     def __str__(self):
         s = f'Symbols: {[value for value in self._symbols.values()]}'
@@ -70,6 +73,9 @@ RESERVED_KEYWORDS = {
     'END': Token(END, 'END'),
     'INTEGER': Token(INTEGER, 'INTEGER'),
     'REAL': Token(REAL, 'REAL'),
+    'BOOLEAN': Token(BOOLEAN, 'BOOLEAN'),
+    'TRUE': Token(BOOLEAN_CONST, True),
+    'FALSE': Token(BOOLEAN_CONST, False),
     'DIV': Token(INTEGER_DIV, 'DIV')
 }
 

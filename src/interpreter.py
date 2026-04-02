@@ -46,6 +46,9 @@ class NodeVisitor():
     def visit_RealNode(self,node):
         return node.value
     
+    def visit_BooleanNode(self,node):
+        return node.value
+    
     def generic_visit(self, node):
         raise Exception(f'No visit_{type(node).__name__} method')
     
@@ -75,14 +78,26 @@ class Interpreter(NodeVisitor):
         rightvalue = self.visit(node.right)
         if node.value == PLUS:
             return leftvalue + rightvalue
-        elif node.value == MINUS:
+        if node.value == MINUS:
             return leftvalue - rightvalue
-        elif node.value == MUL:
+        if node.value == MUL:
             return leftvalue * rightvalue
-        elif node.value == FLOAT_DIV:
+        if node.value == FLOAT_DIV:
             return leftvalue / rightvalue
-        elif node.value == INTEGER_DIV:
+        if node.value == INTEGER_DIV:
             return leftvalue // rightvalue
+        if node.value == EQUAL:
+            return leftvalue == rightvalue
+        if node.value == NOT_EQUAL:
+            return leftvalue != rightvalue
+        if node.value == LESS_THAN:
+            return leftvalue < rightvalue
+        if node.value == LESS_EQUAL:
+            return leftvalue <= rightvalue
+        if node.value == GREATER_THAN:
+            return leftvalue > rightvalue
+        if node.value == GREATER_EQUAL:
+            return leftvalue >= rightvalue
         return None
 
     def visit_UnaryOperation(self,node):

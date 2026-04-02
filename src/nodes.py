@@ -82,7 +82,8 @@ class NoOp(Node):
 class BinaryOperation(Node):
     """
     Returns the result of the operation upon postorder visit\n
-    Handles +, -, *, /, div
+    Handles arithmetic and comparison operators such as
+    +, -, *, /, DIV, =, <>, <, <=, >, >=
     """
     def __init__(self, op, left, right):
         self.value = op
@@ -120,3 +121,12 @@ class RealNode(Node):
     
     def __str__(self):
         return f"RealNode(value={self.value})"
+    
+class BooleanNode(Node):
+    "Represents a bool and returns its value"
+    def __init__(self, value):
+        self.value = bool(value)
+        self.type = BOOLEAN
+    
+    def __str__(self):
+        return f"BooleanNode(value={self.value})"

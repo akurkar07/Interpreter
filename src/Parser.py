@@ -79,12 +79,15 @@ class Parser(object):
 
         type_spec : INTEGER
                     \\| REAL
+                    \\| BOOLEAN
         """
         token = self.current_token 
         if self.current_token.type == INTEGER:
             self.eat(INTEGER)
-        else:
+        elif self.current_token.type == REAL:
             self.eat(REAL)
+        else:
+            self.eat(BOOLEAN)
         node = Type(token)
         return node
 
@@ -131,12 +134,12 @@ class Parser(object):
 
     def assignment_statement(self):
         """
-        assignment_statement : variable ASSIGN expr
+        assignment_statement : variable ASSIGN expression
         """
         left = self.variable()
         token = self.current_token
         self.eat(ASSIGN)
-        right = self.expr()
+        right = self.expression()
         node = Assign(token, left, right)
         return node
     
@@ -152,11 +155,38 @@ class Parser(object):
         "empty :"
         return NoOp()
 
-    def expr(self):
+    def expression(self):
+        """
+        Returns the value of either a plain arithmetic expression or
+        a comparison between two arithmetic expressions
+
+        expression : arithmetic_expr ((EQUAL
+                                     | NOT_EQUAL
+                                     | LESS_THAN
+                                     | LESS_EQUAL
+                                     | GREATER_THAN
+                                     | GREATER_EQUAL) arithmetic_expr)?
+        """
+        node = self.arithmetic_expr()
+        if self.current_token.type in (
+            EQUAL,
+            NOT_EQUAL,
+            LESS_THAN,
+            LESS_EQUAL,
+            GREATER_THAN,
+            GREATER_EQUAL,
+        ):
+            op = self.current_token
+            self.eat(op.type)
+            right = self.arithmetic_expr()
+            node = BinaryOperation(op.type, node, right)
+        return node
+
+    def arithmetic_expr(self):
         """
         Returns an value from the result of the +/- arithmetic expressions
 
-        expr: term((PLUS|MINUS)term)*
+        arithmetic_expr : term ((PLUS | MINUS) term)*
         """
         node = self.term()
 
@@ -196,7 +226,12 @@ class Parser(object):
 
         Returns the integer value of the expression in the parentheses and eats the parentheses
 
-        factor: (PLUS|MINUS) factor | INTEGER_CONST | LPAREN expr RPAREN | variable
+        factor : (PLUS | MINUS) factor
+               | INTEGER_CONST
+               | REAL_CONST
+               | BOOLEAN_CONST
+               | LPAREN expression RPAREN
+               | variable
         """
         token = self.current_token
         if token.type in (PLUS, MINUS):
@@ -206,7 +241,7 @@ class Parser(object):
         
         elif token.type == LPAREN:
             self.eat(LPAREN)
-            node = self.expr()
+            node = self.expression()
             self.eat(RPAREN)
         elif token.type == INTEGER_CONST:
             self.eat(INTEGER_CONST)
@@ -214,6 +249,9 @@ class Parser(object):
         elif token.type == REAL_CONST:
             self.eat(REAL_CONST)
             node = RealNode(token.value)
+        elif token.type == BOOLEAN_CONST:
+            self.eat(BOOLEAN_CONST)
+            node = BooleanNode(token.value)
         else:
             node = self.variable()
         return node

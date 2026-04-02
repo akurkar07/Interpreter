@@ -1,13 +1,19 @@
 from tokens import *
 
-# single character tokens map characters to token types rather than token objects
-SINGLE_CHARS = {
+OPERATORS = {
+    ':=': ASSIGN,
+    '<=': LESS_EQUAL,
+    '>=': GREATER_EQUAL,
+    '<>': NOT_EQUAL,
     ';': SEMI,
     '.': DOT,
     '+': PLUS,
     '-': MINUS,
     '*': MUL,
     '/': FLOAT_DIV,
+    '=': EQUAL,
+    '<': LESS_THAN,
+    '>': GREATER_THAN,
     '(': LPAREN,
     ')': RPAREN,
     ',': COMMA,
@@ -91,6 +97,17 @@ class Lexer(object):
         token = RESERVED_KEYWORDS.get(result_upper, Token(ID, result_upper))
         return token
 
+    def match_operator(self):
+        "Match the longest fixed-symbol token starting at the current position"
+        for length in (2, 1):
+            text = self.text[self.pos:self.pos + length]
+            token_type = OPERATORS.get(text)
+            if token_type is not None:
+                for _ in range(length):
+                    self.advance()
+                return Token(token_type, text)
+        return None
+
     def get_next_token(self):
         while self.current_char is not None:
 
@@ -108,18 +125,10 @@ class Lexer(object):
             
             if self.current_char.isdigit():
                 return self.number()  
-                      
-            if self.current_char == ':' and self.peek() == '=':
-                self.advance()
-                self.advance()
-                return Token(ASSIGN, ':=')
-            
-            #Gets the token type of the current char
-            token_type = SINGLE_CHARS.get(self.current_char)
-            if token_type is not None:
-                char = self.current_char
-                self.advance()
-                return Token(token_type, char)   # Returns a fresh token each time
+
+            token = self.match_operator()
+            if token is not None:
+                return token
 
             self.error()
 
