@@ -56,7 +56,14 @@ def main():
 
     while True:
         if pending_path is None:
-            raw = input("\nscript> ")
+            try: 
+                raw = input("\nscript> ")
+            except KeyboardInterrupt:
+                continue
+            except EOFError:
+                print("Quitting due to EOFError")
+                quit()
+
             action, path = parse_command(raw)
 
             if action is None:
@@ -75,6 +82,8 @@ def main():
             print(f"Error: {e}")
         except OSError as e:
             print(f"Error reading '{pending_path}': {e}")
+        except KeyboardInterrupt:
+            print("\nExecution Cancelled")
         finally:
             pending_path = None
 
