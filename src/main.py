@@ -28,8 +28,9 @@ def run_script(path):
 
 def print_help():
     print("Commands:")
-    print("  :help                Show this help message")
-    print("  :q                   Quit")
+
+    print("  :help / :h           Show this help message")
+    print("  :quit / :q           Quit")
     print("  :run <path>          Run a Pascal script file")
     print("  <path>               Run a Pascal script file")
 
@@ -38,9 +39,9 @@ def parse_command(raw):
     command = raw.strip()
     if not command:
         return None, None
-    if command == ":help":
+    if command in (":help",":h"):
         return "help", None
-    if command == ":q":
+    if command in (":quit",":q"):
         return "quit", None
     if command.startswith(":run "):
         path = command[5:].strip()
