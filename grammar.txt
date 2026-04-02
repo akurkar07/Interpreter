@@ -19,11 +19,17 @@
     statement : compound_statement
               | assignment_statement
               | if_statement
+              | while_statement
+              | writeln_statement
               | empty
 
     assignment_statement : variable ASSIGN expression
 
     if_statement : IF expression THEN statement (ELSE statement)?
+
+    while_statement : WHILE expression DO statement
+
+    writeln_statement : WRITELN LPAREN expression RPAREN
 
     empty :
 

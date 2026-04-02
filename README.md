@@ -13,11 +13,11 @@ Current pipeline:
 
 ## Current Features
 
-- Lexer for Pascal-like tokens (`PROGRAM`, `VAR`, `BEGIN/END`, arithmetic ops, assignment, literals, identifiers)
+- Lexer for Pascal-like tokens (`PROGRAM`, `VAR`, `BEGIN/END`, arithmetic ops, assignment, comparisons, booleans, conditionals, loops, `WRITELN`, literals, identifiers)
 - Recursive-descent parser that builds an AST
 - AST node model in `nodes.py`
 - Visitor-based execution (`NodeVisitor` + `Interpreter`)
-- Semantic pass (`SemanticAnalyser`) with symbol table population, duplicate declaration checks, undeclared variable checks, assignment compatibility checks, and numeric operator checks
+- Semantic pass (`SemanticAnalyser`) with symbol table population, duplicate declaration checks, undeclared variable checks, assignment compatibility checks, boolean condition checks, and numeric operator checks
 - Script runner supports startup file arguments and interactive `:run <path>` execution
 
 ## Project Structure
@@ -59,9 +59,18 @@ statement_list : statement
 
 statement : compound_statement
           | assignment_statement
+          | if_statement
+          | while_statement
+          | writeln_statement
           | empty
 
 assignment_statement : variable ASSIGN expression
+
+if_statement : IF expression THEN statement (ELSE statement)?
+
+while_statement : WHILE expression DO statement
+
+writeln_statement : WRITELN LPAREN expression RPAREN
 
 empty :
 
@@ -124,9 +133,11 @@ script> instructions/a.pas
 
 - Variables must be declared before use
 - Duplicate variable declarations are rejected
+- `IF` and `WHILE` conditions must evaluate to `BOOLEAN`
 - `DIV` requires `INTEGER` operands
 - `/` (`FLOAT_DIV`) yields `REAL`
 - `+`, `-`, `*` yield `INTEGER` only when both operands are `INTEGER`, otherwise `REAL`
+- comparison operators yield `BOOLEAN`
 - Assignments allow exact type match and widening `INTEGER -> REAL`
 
 ## Errors

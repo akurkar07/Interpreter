@@ -32,6 +32,13 @@ class NodeVisitor():
         if node.false_statement is not None:
             self.visit(node.false_statement)
 
+    def visit_While(self, node):
+        self.visit(node.condition)
+        self.visit(node.statement)
+
+    def visit_WriteLn(self, node):
+        self.visit(node.expression)
+
     def visit_Var(self, node):
         return None
 

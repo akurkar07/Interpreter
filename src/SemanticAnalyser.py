@@ -109,6 +109,13 @@ class SemanticAnalyser(NodeVisitor):
         if node.false_statement is not None:
             self.visit(node.false_statement)
 
+    def visit_While(self, node):
+        condition_type = self.visit(node.condition)
+        if condition_type != self.boolean_type:
+            raise InterpreterError("Type Error: WHILE condition must evaluate to BOOLEAN")
+        
+        self.visit(node.statement)
+
     def visit_Var(self,node):
         var_name = node.name
         var_symbol = self.symtab.lookup(var_name)

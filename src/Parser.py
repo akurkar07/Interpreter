@@ -86,8 +86,10 @@ class Parser(object):
             self.eat(INTEGER)
         elif self.current_token.type == REAL:
             self.eat(REAL)
-        else:
+        elif self.current_token.type == BOOLEAN:
             self.eat(BOOLEAN)
+        else:
+            self.error()
         node = Type(token)
         return node
 
@@ -123,6 +125,8 @@ class Parser(object):
         statement : compound_statement
                 | assignment_statement
                 | if_statement
+                | while_statement
+                | writeln_statement
                 | empty
         """
         if self.current_token.type == BEGIN:
@@ -131,6 +135,10 @@ class Parser(object):
             node = self.assignment_statement()
         elif self.current_token.type == IF:
             node = self.if_statement()
+        elif self.current_token.type == WHILE:
+            node = self.while_statement()
+        elif self.current_token.type == WRITELN:
+            node = self.writeln_statement()        
         else:
             node = self.empty()
         return node
@@ -158,7 +166,23 @@ class Parser(object):
             false_statement = None
         node = If(condition,true_statement,false_statement)
         return node
-        
+    
+    def while_statement(self):
+        self.eat(WHILE)
+        condition = self.expression()
+        self.eat(DO)
+        statement = self.statement()
+        node = While(condition,statement)
+        return node
+    
+    def writeln_statement(self):
+        self.eat(WRITELN)
+        self.eat(LPAREN)
+        expression = self.expression()
+        self.eat(RPAREN)
+        node = WriteLn(expression)
+        return node
+         
     def variable(self):
         """
         variable : ID

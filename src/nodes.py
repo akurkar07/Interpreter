@@ -88,7 +88,24 @@ class If(Node):
     def __str__(self):
         false_type = type(self.false_statement).__name__ if self.false_statement is not None else None
         return f"If(condition={type(self.condition).__name__}, true={type(self.true_statement).__name__}, false={false_type})"
+
+class While(Node):
+    "Represents a WHILE ... DO statement"
+    def __init__(self, condition, statement):
+        self.condition = condition
+        self.statement = statement
+
+    def __str__(self):
+        return f"While(condition={type(self.condition).__name__}, statement={type(self.statement).__name__})"
   
+class WriteLn(Node):
+    "Represents a WRITELN statement"
+    def __init__(self, expression):
+        self.expression = expression
+
+    def __str__(self):
+        return f"WriteLn(expression={type(self.expression).__name__})"
+
 class BinaryOperation(Node):
     """
     Returns the result of the operation upon postorder visit\n
