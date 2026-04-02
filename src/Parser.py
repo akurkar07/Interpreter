@@ -1,5 +1,5 @@
 from tokens import *
-from interpreter import *
+from nodes import *
 
 class Parser(object):
     """
@@ -122,12 +122,15 @@ class Parser(object):
         """
         statement : compound_statement
                 | assignment_statement
+                | if_statement
                 | empty
         """
         if self.current_token.type == BEGIN:
             node = self.compound_statement()
         elif self.current_token.type == ID:
             node = self.assignment_statement()
+        elif self.current_token.type == IF:
+            node = self.if_statement()
         else:
             node = self.empty()
         return node
@@ -143,6 +146,19 @@ class Parser(object):
         node = Assign(token, left, right)
         return node
     
+    def if_statement(self):
+        self.eat(IF)
+        condition = self.expression()
+        self.eat(THEN)
+        true_statement = self.statement()
+        if self.current_token.type == ELSE:
+            self.eat(ELSE)
+            false_statement = self.statement()
+        else:
+            false_statement = None
+        node = If(condition,true_statement,false_statement)
+        return node
+        
     def variable(self):
         """
         variable : ID

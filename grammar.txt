@@ -18,9 +18,12 @@
 
     statement : compound_statement
               | assignment_statement
+              | if_statement
               | empty
 
     assignment_statement : variable ASSIGN expression
+
+    if_statement : IF expression THEN statement (ELSE statement)?
 
     empty :
 

@@ -1,4 +1,5 @@
-from interpreter import *
+from tokens import *
+from visitor import NodeVisitor
 
 class SemanticAnalyser(NodeVisitor):
     """
@@ -97,6 +98,16 @@ class SemanticAnalyser(NodeVisitor):
         if not self._assignment_compatible(var_symbol.type, right_type):
             raise InterpreterError(f"Type Error: cannot assign {right_type} to {var_symbol.type} ({var_name})")
         return None
+    
+    def visit_If(self, node):
+        condition_type = self.visit(node.condition)
+        if condition_type != self.boolean_type:
+            raise InterpreterError("Type Error: IF condition must evaluate to BOOLEAN")
+
+        self.visit(node.true_statement)
+
+        if node.false_statement is not None:
+            self.visit(node.false_statement)
 
     def visit_Var(self,node):
         var_name = node.name

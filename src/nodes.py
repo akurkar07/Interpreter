@@ -74,10 +74,20 @@ class Var(Node):
         return f"Var(name={self.name})"
     
 class NoOp(Node):
+    "Just doesn't do anything on visit, equivalent to ε in compiler theory"
     def __str__(self):
         return "NoOp()"
 
-    "Just doesn't do anything on visit, equivalent to ε in compiler theory"
+class If(Node):
+    "Represents an IF ... THEN ... ELSE statement. No ELSE by default"
+    def __init__(self, condition, true_statement, false_statement = None):
+        self.condition = condition
+        self.true_statement = true_statement
+        self.false_statement = false_statement
+    
+    def __str__(self):
+        false_type = type(self.false_statement).__name__ if self.false_statement is not None else None
+        return f"If(condition={type(self.condition).__name__}, true={type(self.true_statement).__name__}, false={false_type})"
   
 class BinaryOperation(Node):
     """
