@@ -31,8 +31,8 @@ Current pipeline:
 - [`src/tokens.py`](src/tokens.py): token constants, token class, symbol classes/table, and custom exceptions
 - [`grammar.txt`](grammar.txt): grammar notes
 - [`GRAMMAR_GUIDE.md`](GRAMMAR_GUIDE.md): short guide to reading the grammar notation
-- `instructions/instructions.txt`: sample input program
-- `instructions/a.pas`: additional sample script
+- `tests/instructions.txt`: sample input program
+- `tests/a.pas`: additional sample script
 
 ## Grammar (Implemented)
 
@@ -112,19 +112,19 @@ Behavior:
 - Pass a script path as an argument to run immediately:
 
 ```bash
-python src/main.py instructions/instructions.txt
+python src/main.py tests/instructions.txt
 ```
 
 - Or start interactive mode and run scripts by path:
 
 ```text
-script> :run instructions/instructions.txt
+script> :run tests/instructions.txt
 ```
 
 - You can also type a path directly at the prompt:
 
 ```text
-script> instructions/a.pas
+script> tests/a.pas
 ```
 
 - Type `:q` to quit

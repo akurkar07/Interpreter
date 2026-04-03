@@ -92,5 +92,8 @@ class LexerError(Exception):
 class ParserError(Exception):
     pass
 
+class SemanticError(Exception):
+    pass
+
 class InterpreterError(Exception):
     pass

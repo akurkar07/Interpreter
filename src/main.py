@@ -1,6 +1,6 @@
 import sys
 
-from tokens import LexerError, ParserError, InterpreterError
+from tokens import LexerError, ParserError, SemanticError, InterpreterError
 from Lexer import Lexer
 from Parser import Parser
 from SemanticAnalyser import SemanticAnalyser
@@ -78,7 +78,7 @@ def main():
 
         try:
             run_script(pending_path)
-        except (LexerError, ParserError, InterpreterError) as e:
+        except (LexerError, ParserError, SemanticError, InterpreterError) as e:
             print(f"Error: {e}")
         except OSError as e:
             print(f"Error reading '{pending_path}': {e}")

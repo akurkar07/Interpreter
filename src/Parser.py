@@ -18,14 +18,15 @@ class Parser(object):
     def __repr__(self):
         return self.__str__()
 
-    def error(self):
-        raise ParserError(f'Invalid token at line {self.lexer.line}, position {self.lexer.column}: {self.current_token}')
-
     def eat(self, token_type):
         if self.current_token.type == token_type:
             self.current_token = self.lexer.get_next_token()
         else:
-            self.error()
+            raise ParserError(
+                                f"Invalid token at line {self.lexer.line}, position {self.lexer.column}. "
+                                f"Expected {token_type}, got {self.current_token.type}"
+                             )
+
 
     def program(self):
         "program : PROGRAM variable SEMI block DOT"

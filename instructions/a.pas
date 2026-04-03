@@ -1,1 +1,0 @@
-PROGRAM a; BEGIN END.
