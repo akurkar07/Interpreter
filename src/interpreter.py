@@ -6,6 +6,9 @@ class Interpreter(NodeVisitor):
     """Base visitor class, not used directly but can be inherited from for more complex visitors"""
     def __init__(self):
         self.GLOBAL_SCOPE = {}
+
+    def runtime_error(self, message, node):
+        raise InterpreterError(message, node.line, node.column)
         
     def visit_Assign(self,node):
         var_name = node.left.name
@@ -29,7 +32,7 @@ class Interpreter(NodeVisitor):
 
     def visit_Var(self,node):
         if node.name not in self.GLOBAL_SCOPE:
-            raise InterpreterError(f"Variable {node.name} is not defined")
+            self.runtime_error(f"Variable {node.name} is not defined", node)
         return self.GLOBAL_SCOPE[node.name]
 
     def visit_BinaryOperation(self,node):
@@ -42,9 +45,15 @@ class Interpreter(NodeVisitor):
         if node.value == MUL:
             return leftvalue * rightvalue
         if node.value == FLOAT_DIV:
-            return leftvalue / rightvalue
+            try:
+                return leftvalue / rightvalue
+            except ZeroDivisionError:
+                self.runtime_error("Division by zero", node)
         if node.value == INTEGER_DIV:
-            return leftvalue // rightvalue
+            try:
+                return leftvalue // rightvalue
+            except ZeroDivisionError:
+                self.runtime_error("Division by zero", node)
         if node.value == EQUAL:
             return leftvalue == rightvalue
         if node.value == NOT_EQUAL:

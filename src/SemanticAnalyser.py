@@ -12,6 +12,9 @@ class SemanticAnalyser(NodeVisitor):
         self.real_type = self.symtab.lookup(REAL)
         self.boolean_type = self.symtab.lookup(BOOLEAN)
 
+    def semantic_error(self, message, node):
+        raise SemanticError(message, node.line, node.column)
+
     def _is_numeric(self, type_symbol):
         return type_symbol in (self.integer_type, self.real_type)
 
@@ -27,7 +30,7 @@ class SemanticAnalyser(NodeVisitor):
         type_symbol = self.visit(node.type_node)
         var_name = node.var_node.name
         if self.symtab.lookup(var_name) is not None:
-            raise SemanticError(f"Duplicate declaration of variable {var_name}")
+            self.semantic_error(f"Duplicate declaration of variable {var_name}", node.var_node)
         var_symbol = VarSymbol(var_name, type_symbol)
         self.symtab.define(var_symbol)
         return var_symbol
@@ -35,7 +38,7 @@ class SemanticAnalyser(NodeVisitor):
     def visit_Type(self, node):
         type_symbol = self.symtab.lookup(node.value)
         if type_symbol is None:
-            raise SemanticError(f"Unknown type {node.value}")
+            self.semantic_error(f"Unknown type {node.value}", node)
         return type_symbol
 
     def visit_IntegerNode(self,node):
@@ -62,11 +65,11 @@ class SemanticAnalyser(NodeVisitor):
 
         if node.value in arithmetic_ops:
             if not (self._is_numeric(left_type) and self._is_numeric(right_type)):
-                raise SemanticError(f"Type Error: invalid operands for {node.value}: {left_type}, {right_type}")
+                self.semantic_error(f"Type Error: invalid operands for {node.value}: {left_type}, {right_type}", node)
 
             if node.value == INTEGER_DIV:
                 if left_type != self.integer_type or right_type != self.integer_type:
-                    raise SemanticError("Type Error: DIV requires INTEGER operands")
+                    self.semantic_error("Type Error: DIV requires INTEGER operands", node)
                 return self.integer_type
 
             if node.value == FLOAT_DIV:
@@ -78,31 +81,31 @@ class SemanticAnalyser(NodeVisitor):
 
         if node.value in comparison_ops:
             if not (self._is_numeric(left_type) and self._is_numeric(right_type)):
-                raise SemanticError(f"Type Error: invalid operands for {node.value}: {left_type}, {right_type}")
+                self.semantic_error(f"Type Error: invalid operands for {node.value}: {left_type}, {right_type}", node)
             return self.boolean_type
 
-        raise SemanticError(f"Unknown binary operator {node.value}")
+        self.semantic_error(f"Unknown binary operator {node.value}", node)
 
     def visit_UnaryOperation(self, node):
         child_type = self.visit(node.child)
         if not self._is_numeric(child_type):
-            raise SemanticError(f"Type Error: invalid unary operand type {child_type}")
+            self.semantic_error(f"Type Error: invalid unary operand type {child_type}", node)
         return child_type
     
     def visit_Assign(self, node):
         var_name = node.left.name
         var_symbol = self.symtab.lookup(var_name)
         if var_symbol is None:
-            raise SemanticError(f"Variable {var_name} is not defined")
+            self.semantic_error(f"Variable {var_name} is not defined", node.left)
         right_type = self.visit(node.right)
         if not self._assignment_compatible(var_symbol.type, right_type):
-            raise SemanticError(f"Type Error: cannot assign {right_type} to {var_symbol.type} ({var_name})")
+            self.semantic_error(f"Type Error: cannot assign {right_type} to {var_symbol.type} ({var_name})", node)
         return None
     
     def visit_If(self, node):
         condition_type = self.visit(node.condition)
         if condition_type != self.boolean_type:
-            raise SemanticError("Type Error: IF condition must evaluate to BOOLEAN")
+            self.semantic_error("Type Error: IF condition must evaluate to BOOLEAN", node)
 
         self.visit(node.true_statement)
 
@@ -112,7 +115,7 @@ class SemanticAnalyser(NodeVisitor):
     def visit_While(self, node):
         condition_type = self.visit(node.condition)
         if condition_type != self.boolean_type:
-            raise SemanticError("Type Error: WHILE condition must evaluate to BOOLEAN")
+            self.semantic_error("Type Error: WHILE condition must evaluate to BOOLEAN", node)
         
         self.visit(node.statement)
 
@@ -120,5 +123,5 @@ class SemanticAnalyser(NodeVisitor):
         var_name = node.name
         var_symbol = self.symtab.lookup(var_name)
         if var_symbol is None:
-            raise SemanticError(f"Variable {var_name} is not defined")
+            self.semantic_error(f"Variable {var_name} is not defined", node)
         return var_symbol.type

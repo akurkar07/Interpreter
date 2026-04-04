@@ -1,6 +1,17 @@
 from tokens import *
 
 class Node():
+    "A node is anything in the grammar that is capitalised"
+    @property
+    def line(self):
+        token = getattr(self, "token", None)
+        return getattr(token, "line", None)
+
+    @property
+    def column(self):
+        token = getattr(self, "token", None)
+        return getattr(token, "column", None)
+
     def __repr__(self):
         return self.__str__()
 
@@ -80,7 +91,8 @@ class NoOp(Node):
 
 class If(Node):
     "Represents an IF ... THEN ... ELSE statement. No ELSE by default"
-    def __init__(self, condition, true_statement, false_statement = None):
+    def __init__(self, token, condition, true_statement, false_statement = None):
+        self.token = token
         self.condition = condition
         self.true_statement = true_statement
         self.false_statement = false_statement
@@ -91,7 +103,8 @@ class If(Node):
 
 class While(Node):
     "Represents a WHILE ... DO statement"
-    def __init__(self, condition, statement):
+    def __init__(self, token, condition, statement):
+        self.token = token
         self.condition = condition
         self.statement = statement
 
@@ -100,7 +113,8 @@ class While(Node):
   
 class WriteLn(Node):
     "Represents a WRITELN statement"
-    def __init__(self, expression):
+    def __init__(self, token, expression):
+        self.token = token
         self.expression = expression
 
     def __str__(self):
@@ -112,8 +126,9 @@ class BinaryOperation(Node):
     Handles arithmetic and comparison operators such as
     +, -, *, /, DIV, =, <>, <, <=, >, >=
     """
-    def __init__(self, op, left, right):
-        self.value = op
+    def __init__(self, token, left, right):
+        self.token = token
+        self.value = token.type
         self.left = left
         self.right = right
     
@@ -123,8 +138,9 @@ class BinaryOperation(Node):
         return f"BinaryOperation(op={self.value}, left={left_type}, right={right_type})"
 
 class UnaryOperation(Node):
-    def __init__(self, value = None,child = None):
-        self.value = value
+    def __init__(self, token = None,child = None):
+        self.token = token
+        self.value = token.type if token is not None else None
         self.child = child
 
     def __str__(self):
@@ -133,7 +149,9 @@ class UnaryOperation(Node):
 
 class IntegerNode(Node):
     "Represents an integer and returns its value"
-    def __init__(self, value):
+    def __init__(self, token):
+        self.token = token
+        value = token.value
         self.value = int(value)
         self.type = INTEGER
     
@@ -142,7 +160,9 @@ class IntegerNode(Node):
     
 class RealNode(Node):
     "Represents a real and returns its value"
-    def __init__(self, value):
+    def __init__(self, token):
+        self.token = token
+        value = token.value
         self.value = float(value)
         self.type = REAL
     
@@ -151,7 +171,9 @@ class RealNode(Node):
     
 class BooleanNode(Node):
     "Represents a bool and returns its value"
-    def __init__(self, value):
+    def __init__(self, token):
+        self.token = token
+        value = token.value
         self.value = bool(value)
         self.type = BOOLEAN
     

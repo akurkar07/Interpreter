@@ -23,9 +23,10 @@ class Parser(object):
             self.current_token = self.lexer.get_next_token()
         else:
             raise ParserError(
-                                f"Invalid token at line {self.lexer.line}, position {self.lexer.column}. "
-                                f"Expected {token_type}, got {self.current_token.type}"
-                             )
+                f"Expected {token_type}, got {self.current_token.type}",
+                self.current_token.line,
+                self.current_token.column,
+            )
 
 
     def program(self):
@@ -90,7 +91,11 @@ class Parser(object):
         elif self.current_token.type == BOOLEAN:
             self.eat(BOOLEAN)
         else:
-            self.error()
+            raise ParserError(
+                f"Expected type specifier, got {self.current_token.type}",
+                self.current_token.line,
+                self.current_token.column,
+            )
         node = Type(token)
         return node
 
@@ -156,6 +161,7 @@ class Parser(object):
         return node
     
     def if_statement(self):
+        token = self.current_token
         self.eat(IF)
         condition = self.expression()
         self.eat(THEN)
@@ -165,23 +171,25 @@ class Parser(object):
             false_statement = self.statement()
         else:
             false_statement = None
-        node = If(condition,true_statement,false_statement)
+        node = If(token, condition, true_statement, false_statement)
         return node
     
     def while_statement(self):
+        token = self.current_token
         self.eat(WHILE)
         condition = self.expression()
         self.eat(DO)
         statement = self.statement()
-        node = While(condition,statement)
+        node = While(token, condition, statement)
         return node
     
     def writeln_statement(self):
+        token = self.current_token
         self.eat(WRITELN)
         self.eat(LPAREN)
         expression = self.expression()
         self.eat(RPAREN)
-        node = WriteLn(expression)
+        node = WriteLn(token, expression)
         return node
          
     def variable(self):
@@ -220,7 +228,7 @@ class Parser(object):
             op = self.current_token
             self.eat(op.type)
             right = self.arithmetic_expr()
-            node = BinaryOperation(op.type, node, right)
+            node = BinaryOperation(op, node, right)
         return node
 
     def arithmetic_expr(self):
@@ -239,7 +247,7 @@ class Parser(object):
                 self.eat(MINUS)
 
             right = self.term()
-            node = BinaryOperation(op.type, node, right)
+            node = BinaryOperation(op, node, right)
         return node
     
     # parser term precedence
@@ -255,7 +263,7 @@ class Parser(object):
                 self.eat(INTEGER_DIV) 
 
             right = self.factor()
-            node = BinaryOperation(op.type, node, right)
+            node = BinaryOperation(op, node, right)
         return node
 
     
@@ -278,7 +286,7 @@ class Parser(object):
         if token.type in (PLUS, MINUS):
             self.eat(token.type)                       # consume the unary operator
             child = self.factor()                      # then parse the operand
-            return UnaryOperation(token.type, child)
+            return UnaryOperation(token, child)
         
         elif token.type == LPAREN:
             self.eat(LPAREN)
@@ -286,13 +294,13 @@ class Parser(object):
             self.eat(RPAREN)
         elif token.type == INTEGER_CONST:
             self.eat(INTEGER_CONST)
-            node = IntegerNode(token.value)
+            node = IntegerNode(token)
         elif token.type == REAL_CONST:
             self.eat(REAL_CONST)
-            node = RealNode(token.value)
+            node = RealNode(token)
         elif token.type == BOOLEAN_CONST:
             self.eat(BOOLEAN_CONST)
-            node = BooleanNode(token.value)
+            node = BooleanNode(token)
         else:
             node = self.variable()
         return node
@@ -300,5 +308,9 @@ class Parser(object):
     def parse(self):
         node = self.program()
         if self.current_token.type != EOF:
-            self.error()
+            raise ParserError(
+                f"Unexpected token after program end: {self.current_token.type}",
+                self.current_token.line,
+                self.current_token.column,
+            )
         return node

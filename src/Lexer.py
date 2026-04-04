@@ -40,7 +40,11 @@ class Lexer(object):
         return self.__str__()
 
     def error(self):
-        raise LexerError(f'Invalid character at line {self.line}, position {self.column}: {self.current_char}')
+        raise LexerError(
+            f"Invalid character: {self.current_char}",
+            self.line,
+            self.column + 1,
+        )
 
     def advance(self):
         """Move position forward and update current_char\n
@@ -67,6 +71,8 @@ class Lexer(object):
         self.advance()  # Skip the closing curly brace
     
     def number(self):
+        start_line = self.line
+        start_column = self.column + 1
         result = ''
         while self.current_char is not None and self.current_char.isdigit():
             result += self.current_char
@@ -77,8 +83,8 @@ class Lexer(object):
             while self.current_char is not None and self.current_char.isdigit():
                 result += self.current_char
                 self.advance()
-            return Token(REAL_CONST, float(result))
-        return Token(INTEGER_CONST, int(result))
+            return Token(REAL_CONST, float(result), start_line, start_column)
+        return Token(INTEGER_CONST, int(result), start_line, start_column)
 
     def peek(self):
         "Returns the token after the current token if there is one"
@@ -88,24 +94,30 @@ class Lexer(object):
     
     def _id(self):
         """Handle identifiers and reserved keywords"""
+        start_line = self.line
+        start_column = self.column + 1
         result = ''
         while self.current_char is not None and (self.current_char.isalnum() or self.current_char == '_'):
             result += self.current_char
             self.advance()
 
         result_upper = result.upper()
-        token = RESERVED_KEYWORDS.get(result_upper, Token(ID, result_upper))
-        return token
+        reserved = RESERVED_KEYWORDS.get(result_upper)
+        if reserved is not None:
+            return Token(reserved.type, reserved.value, start_line, start_column)
+        return Token(ID, result_upper, start_line, start_column)
 
     def match_operator(self):
         "Match the longest fixed-symbol token starting at the current position"
+        start_line = self.line
+        start_column = self.column + 1
         for length in (2, 1):
             text = self.text[self.pos:self.pos + length]
             token_type = OPERATORS.get(text)
             if token_type is not None:
                 for _ in range(length):
                     self.advance()
-                return Token(token_type, text)
+                return Token(token_type, text, start_line, start_column)
         return None
 
     def get_next_token(self):
@@ -132,4 +144,4 @@ class Lexer(object):
 
             self.error()
 
-        return Token(EOF, None)
+        return Token(EOF, None, self.line, self.column + 1)

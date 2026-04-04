@@ -9,15 +9,33 @@ class Token(object):
     """
     Every symbol in the expression being evaluated is a token.
     """
-    def __init__(self, type, value):
+    def __init__(self, type, value, line=None, column=None):
         self.type = type
         self.value = value
+        self.line = line
+        self.column = column
 
     def __str__(self):
-        return f'Token({self.type}, {repr(self.value)})'
+        location = ""
+        if self.line is not None and self.column is not None:
+            location = f", line={self.line}, column={self.column}"
+        return f'Token({self.type}, {repr(self.value)}{location})'
 
     def __repr__(self):
         return self.__str__()
+
+
+class PascalError(Exception):
+    def __init__(self, message, line=None, column=None):
+        self.message = message
+        self.line = line
+        self.column = column
+        super().__init__(self.__str__())
+
+    def __str__(self):
+        if self.line is not None and self.column is not None:
+            return f"line {self.line}, column {self.column}: {self.message}"
+        return self.message
     
 class Symbol(object):
     def __init__(self, name, type=None):
@@ -86,14 +104,14 @@ RESERVED_KEYWORDS = {
 }
 
 # Custom error classes for robust error handling
-class LexerError(Exception):
+class LexerError(PascalError):
     pass
 
-class ParserError(Exception):
+class ParserError(PascalError):
     pass
 
-class SemanticError(Exception):
+class SemanticError(PascalError):
     pass
 
-class InterpreterError(Exception):
+class InterpreterError(PascalError):
     pass
