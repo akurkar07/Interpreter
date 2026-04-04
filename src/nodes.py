@@ -42,6 +42,24 @@ class VarDecl(Node):
     def __str__(self):
         return f"VarDecl(var_name={getattr(self.var_node, 'name', None)}, type={getattr(self.type_node, 'value', None)})"
 
+class ProcDecl(Node):
+    def __init__(self, token, name, params, block):
+        self.token = token
+        self.name = name
+        self.params = params
+        self.block = block
+
+    def __str__(self):
+        return f"ProcDecl(params={len(self.params)}, block={type(self.block).__name__})"
+
+class Param(Node):
+    def __init__(self, var_node, type_node):
+        self.var_node = var_node
+        self.type_node = type_node
+
+    def __str__(self):
+        return f"Param(var_name={getattr(self.var_node, 'name', None)}, type={getattr(self.type_node, 'value', None)})"
+
 class Type(Node):
     def __init__(self, token):
         self.token = token
@@ -65,7 +83,7 @@ class Assign(Node):
     """
     def __init__(self, value = None, left = None, right = None):
         self.left = left
-        self.token = self.value = value
+        self.token = value
         self.right = right
     
     def __str__(self):

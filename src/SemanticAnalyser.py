@@ -35,6 +35,15 @@ class SemanticAnalyser(NodeVisitor):
         self.symtab.define(var_symbol)
         return var_symbol
 
+    def visit_Param(self, node):
+        type_symbol = self.visit(node.type_node)
+        var_name = node.var_node.name
+        if self.symtab.lookup(var_name) is not None:
+            self.semantic_error(f"Duplicate declaration of variable {var_name}", node.var_node)
+        var_symbol = VarSymbol(var_name, type_symbol)
+        self.symtab.define(var_symbol)
+        return var_symbol
+
     def visit_Type(self, node):
         type_symbol = self.symtab.lookup(node.value)
         if type_symbol is None:

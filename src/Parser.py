@@ -45,8 +45,9 @@ class Parser(object):
         return Block(vars, cmpd_nodes)
 
     def declarations(self):
-        """declarations : VAR (variable_declaration SEMI)+
-                        \\| empty
+        """
+        currently declarations are a plain list instead of a node itself
+        declarations : (VAR (variable_declaration SEMI)+)? procedure_declaration*
         """
         declarations = []
         if self.current_token.type == VAR:
@@ -55,6 +56,9 @@ class Parser(object):
                 var_decl = self.variable_declaration()
                 declarations.extend(var_decl)
                 self.eat(SEMI)
+        while self.current_token.type == PROCEDURE:
+            proc_decl = self.procedure_declaration()
+            declarations.append(proc_decl)
         return declarations
 
     def variable_declaration(self):
@@ -75,13 +79,57 @@ class Parser(object):
         ]
         return var_declarations # then return the list of var declarations with that type
     
+    def procedure_declaration(self):
+        "procedure_declaration : PROCEDURE ID (LPAREN parameter_list RPAREN)? SEMI block SEMI"
+        param_list = []
+        self.eat(PROCEDURE)
+        token = self.current_token          # gets the name of the procedure from the value of the current token
+        proc_name = self.current_token.value
+        self.eat(ID)
+        if self.current_token.type == LPAREN:
+            self.eat(LPAREN)
+            param_list = self.parameter_list()
+            self.eat(RPAREN)
+        self.eat(SEMI)
+        block = self.block()
+        self.eat(SEMI)
+
+        return ProcDecl(token, proc_name, param_list, block)
+    
+    def parameter_list(self):
+        """
+        We have this so that we can declare parameters of different types inside procedure paranthesis\n
+        parameter_list : parameters (SEMI parameters)*
+        """
+        params = self.parameters()
+        while self.current_token.type == SEMI:
+            self.eat(SEMI)
+            # Parse one more parameter group and merge it into the same flat list.
+            params.extend(self.parameters())
+        return params
+
+    def parameters(self):
+        """parameters : ID (COMMA ID)* COLON type_spec"""
+        parameter_names = [Var(self.current_token)]  # first ID since if param list is being called, there must be at least one parameter
+        self.eat(ID)
+
+        while self.current_token.type == COMMA:     # keeps receiving param names with commas
+            self.eat(COMMA)
+            parameter_names.append(Var(self.current_token))
+            self.eat(ID)
+
+        self.eat(COLON)
+
+        type_node = self.type_spec()                # We determine their type
+        parameters = [
+            Param(var_node, type_node) for var_node in parameter_names
+        ]
+        return parameters # then return the list of parameters with that type
+
+
     def type_spec(self):
         """
-        Returns the type bsed on the INTEGER or REAL after the colon
-
-        type_spec : INTEGER
-                    \\| REAL
-                    \\| BOOLEAN
+        type_spec : INTEGER | REAL | BOOLEAN
         """
         token = self.current_token 
         if self.current_token.type == INTEGER:

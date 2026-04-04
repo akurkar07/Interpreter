@@ -2,10 +2,15 @@
 
     block : declarations compound_statement
 
-    declarations : VAR (variable_declaration SEMI)+
-                 | empty
+    declarations : (VAR (variable_declaration SEMI)+)? procedure_declaration*
 
     variable_declaration : ID (COMMA ID)* COLON type_spec
+
+    procedure_declaration : PROCEDURE ID (LPAREN parameter_list RPAREN)? SEMI block SEMI
+
+    parameter_list : parameters (SEMI parameters)*
+
+    parameters : ID (COMMA ID)* COLON type_spec
 
     type_spec : INTEGER
               | REAL
@@ -18,12 +23,15 @@
 
     statement : compound_statement
               | assignment_statement
+              | procedure_call_statement
               | if_statement
               | while_statement
               | writeln_statement
               | empty
 
     assignment_statement : variable ASSIGN expression
+
+    procedure_call_statement : ID (LPAREN (expression (COMMA expression)*)? RPAREN)?
 
     if_statement : IF expression THEN statement (ELSE statement)?
 

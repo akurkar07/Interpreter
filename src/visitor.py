@@ -15,6 +15,9 @@ class NodeVisitor():
 
     def visit_VarDecl(self, node):
         return self.visit(node.type_node)
+    
+    def visit_Param(self, node):
+        return self.visit(node.type_node)
 
     def visit_Type(self, node):
         return node.value
