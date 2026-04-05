@@ -15,6 +15,7 @@
     type_spec : INTEGER
               | REAL
               | BOOLEAN
+              | STRING
 
     compound_statement : BEGIN statement_list END
 
@@ -48,6 +49,9 @@
                                  | GREATER_THAN
                                  | GREATER_EQUAL) arithmetic_expr)?
 
+    // `+` can be used for numeric addition or string concatenation.
+    // Comparison operators may compare numeric expressions or strings.
+
     arithmetic_expr : term ((PLUS | MINUS) term)*
 
     term : factor ((MUL | INTEGER_DIV | FLOAT_DIV) factor)*
@@ -57,6 +61,7 @@
            | INTEGER_CONST
            | REAL_CONST
            | BOOLEAN_CONST
+           | STRING_CONST
            | LPAREN expression RPAREN
            | variable
 

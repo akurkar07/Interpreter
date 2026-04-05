@@ -39,11 +39,11 @@ class Lexer(object):
     def __repr__(self):
         return self.__str__()
 
-    def error(self):
+    def error(self, message=None, line=None, column=None):
         raise LexerError(
-            f"Invalid character: {self.current_char}",
-            self.line,
-            self.column + 1,
+            message if message is not None else f"Invalid character: {self.current_char}",
+            self.line if line is None else line,
+            (self.column + 1) if column is None else column,
         )
 
     def advance(self):
@@ -66,8 +66,15 @@ class Lexer(object):
             self.advance()
 
     def skip_comment(self):
-        while self.current_char != '}':
+        start_line = self.line
+        start_column = self.column + 1
+
+        while self.current_char is not None and self.current_char != '}':
             self.advance()
+
+        if self.current_char is None:
+            self.error("Unterminated comment", start_line, start_column)
+
         self.advance()  # Skip the closing curly brace
     
     def number(self):
@@ -85,6 +92,22 @@ class Lexer(object):
                 self.advance()
             return Token(REAL_CONST, float(result), start_line, start_column)
         return Token(INTEGER_CONST, int(result), start_line, start_column)
+    
+    def string(self):
+        start_line = self.line
+        start_column = self.column + 1
+        result = ''
+        while self.current_char is not None and self.current_char != "'":
+            if self.current_char == "\n":
+                self.error("Unterminated string", start_line, start_column)
+            result += self.current_char
+            self.advance()
+        if self.current_char is None:
+            self.error("Unterminated string", start_line, start_column)
+
+        self.advance()  # Skip closing quote
+        return Token(STRING_CONST, result, start_line, start_column)
+
 
     def peek(self):
         "Returns the token after the current token if there is one"
@@ -131,6 +154,10 @@ class Lexer(object):
                 self.advance()
                 self.skip_comment()
                 continue
+
+            if self.current_char == "'":
+                self.advance()
+                return self.string()
 
             if self.current_char.isalpha() or self.current_char == '_':
                 return self._id()
