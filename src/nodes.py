@@ -52,6 +52,17 @@ class ProcDecl(Node):
     def __str__(self):
         return f"ProcDecl(name={self.name}, params={len(self.params)}, block={type(self.block).__name__})"
 
+class FuncDecl(Node):
+    def __init__(self, token, name, params, return_type, block):
+        self.token = token
+        self.name = name
+        self.params = params
+        self.return_type = return_type
+        self.block = block
+
+    def __str__(self):
+        return f"FuncDecl(name={self.name}, params={len(self.params)}, block={type(self.block).__name__})"
+
 class ProcedureCall(Node):
     def __init__(self, token, name, params):
         self.token = token
@@ -60,6 +71,15 @@ class ProcedureCall(Node):
 
     def __str__(self):
         return f"ProcedureCall(name={self.name}, params={len(self.params)})"
+    
+class FunctionCall(Node):
+    def __init__(self, token, name, params):
+        self.token = token
+        self.name = name
+        self.params = params
+
+    def __str__(self):
+        return f"FunctionCall(name={self.name}, params={len(self.params)})"
 
 class Param(Node):
     def __init__(self, var_node, type_node):
@@ -208,3 +228,14 @@ class BooleanNode(Node):
     
     def __str__(self):
         return f"BooleanNode(value={self.value})"
+
+class StringNode(Node):
+    "Represents a string and returns its value"
+    def __init__(self, token):
+        self.token = token
+        value = token.value
+        self.value = str(value)
+        self.type = STRING
+    
+    def __str__(self):
+        return f"StringNode(value={self.value})"

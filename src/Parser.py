@@ -49,7 +49,7 @@ class Parser(object):
     def declarations(self):
         """
         currently declarations are a plain list instead of a node itself
-        declarations : (VAR (variable_declaration SEMI)+)? procedure_declaration*
+        declarations : (VAR (variable_declaration SEMI)+)? (procedure_declaration | function_declaration)*
         """
         declarations = []
         if self.current_token.type == VAR:
@@ -58,8 +58,11 @@ class Parser(object):
                 var_decl = self.variable_declaration()
                 declarations.extend(var_decl)
                 self.eat(SEMI)
-        while self.current_token.type == PROCEDURE:
-            proc_decl = self.procedure_declaration()
+        while self.current_token.type in (PROCEDURE,FUNCTION):
+            if self.current_token.type == PROCEDURE:
+                proc_decl = self.procedure_declaration()
+            else:
+                proc_decl = self.function_declaration()
             declarations.append(proc_decl)
         return declarations
 
@@ -95,6 +98,25 @@ class Parser(object):
 
         return ProcDecl(token, proc_name, param_list, block)
     
+    def function_declaration(self):
+        "function_declaration : FUNCTION ID (LPAREN parameter_list RPAREN)? COLON type_spec SEMI block SEMI"
+        param_list = []
+        self.eat(FUNCTION)
+        token = self.current_token          # gets the name of the procedure from the value of the current token
+        func_name = self.current_token.value
+        self.eat(ID)
+        if self.current_token.type == LPAREN:
+            self.eat(LPAREN)
+            param_list = self.parameter_list()
+            self.eat(RPAREN)
+        self.eat(COLON)
+        return_type = self.type_spec()
+        self.eat(SEMI)
+        block = self.block()
+        self.eat(SEMI)
+
+        return FuncDecl(token, func_name, param_list, return_type, block)
+
     def parameter_list(self):
         """
         We have this so that we can declare parameters of different types inside procedure paranthesis\n
@@ -125,7 +147,7 @@ class Parser(object):
 
     def type_spec(self):
         """
-        type_spec : INTEGER | REAL | BOOLEAN
+        type_spec : INTEGER | REAL | BOOLEAN | STRING
         """
         token = self.current_token 
         if self.current_token.type == INTEGER:
@@ -134,6 +156,8 @@ class Parser(object):
             self.eat(REAL)
         elif self.current_token.type == BOOLEAN:
             self.eat(BOOLEAN)
+        elif self.current_token.type == STRING:
+            self.eat(STRING)
         else:
             raise ParserError(
                 f"Expected type specifier, got {self.current_token.type}",
@@ -341,12 +365,14 @@ class Parser(object):
 
         Returns the integer value of the expression in the parentheses and eats the parentheses
 
-        factor : (PLUS | MINUS) factor
-               | INTEGER_CONST
-               | REAL_CONST
-               | BOOLEAN_CONST
-               | LPAREN expression RPAREN
-               | variable
+        factor : PLUS factor
+            | MINUS factor
+            | INTEGER_CONST
+            | REAL_CONST
+            | BOOLEAN_CONST
+            | STRING_CONST
+            | LPAREN expression RPAREN
+            | variable
         """
         token = self.current_token
         if token.type in (PLUS, MINUS):
@@ -367,9 +393,30 @@ class Parser(object):
         elif token.type == BOOLEAN_CONST:
             self.eat(BOOLEAN_CONST)
             node = BooleanNode(token)
+        elif token.type == STRING_CONST:    
+            self.eat(STRING_CONST)
+            node = StringNode(token)
+        elif token.type == ID and self.next_token.type == LPAREN: # function calls start with ID
+            node = self.function_call()
         else:
             node = self.variable()
         return node
+    
+    def function_call(self):
+        "function_call : ID LPAREN (expression (COMMA expression)*)? RPAREN"
+        token = self.current_token
+        func_name = token.value
+        self.eat(ID)
+        self.eat(LPAREN)
+        arguments = []
+        if self.current_token.type != RPAREN:
+            arguments.append(self.expression())
+            while self.current_token.type == COMMA:
+                self.eat(COMMA)
+                arguments.append(self.expression())
+        self.eat(RPAREN)
+
+        return FunctionCall(token, func_name, arguments)
     
     def parse(self):
         node = self.program()

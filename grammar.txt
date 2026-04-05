@@ -2,11 +2,13 @@
 
     block : declarations compound_statement
 
-    declarations : (VAR (variable_declaration SEMI)+)? procedure_declaration*
+    declarations : (VAR (variable_declaration SEMI)+)? (procedure_declaration | function_declaration)*
 
     variable_declaration : ID (COMMA ID)* COLON type_spec
 
     procedure_declaration : PROCEDURE ID (LPAREN parameter_list RPAREN)? SEMI block SEMI
+
+    function_declaration : FUNCTION ID (LPAREN parameter_list RPAREN)? COLON type_spec SEMI block SEMI
 
     parameter_list : parameters (SEMI parameters)*
 
@@ -62,7 +64,10 @@
            | REAL_CONST
            | BOOLEAN_CONST
            | STRING_CONST
+           | function_call
            | LPAREN expression RPAREN
            | variable
+
+    function_call : ID LPAREN (expression (COMMA expression)*)? RPAREN
 
     variable: ID

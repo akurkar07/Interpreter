@@ -1,9 +1,9 @@
 INTEGER, REAL, BOOLEAN, STRING, INTEGER_CONST, REAL_CONST, BOOLEAN_CONST, STRING_CONST, PLUS, MINUS, MUL, FLOAT_DIV, INTEGER_DIV, \
 LPAREN, RPAREN, BEGIN, END, DOT, ID, ASSIGN, SEMI, COMMA, COLON, VAR, PROGRAM, IF, THEN, ELSE, WHILE, DO, \
-WRITELN, PROCEDURE, EQUAL, NOT_EQUAL, LESS_THAN, LESS_EQUAL, GREATER_THAN, GREATER_EQUAL, TRUE, FALSE, EOF = \
+WRITELN, PROCEDURE, FUNCTION, EQUAL, NOT_EQUAL, LESS_THAN, LESS_EQUAL, GREATER_THAN, GREATER_EQUAL, TRUE, FALSE, EOF = \
 'INTEGER', 'REAL', 'BOOLEAN', 'STRING', 'INTEGER_CONST', 'REAL_CONST', 'BOOLEAN_CONST', 'STRING_CONST', 'PLUS', 'MINUS', 'MUL', 'FLOAT_DIV', 'INTEGER_DIV', \
 'LPAREN', 'RPAREN', 'BEGIN', 'END', 'DOT', 'ID', 'ASSIGN', 'SEMI', 'COMMA', 'COLON', 'VAR', 'PROGRAM', 'IF', 'THEN', 'ELSE', 'WHILE', 'DO', \
-'WRITELN', 'PROCEDURE', 'EQUAL', 'NOT_EQUAL', 'LESS_THAN', 'LESS_EQUAL', 'GREATER_THAN', 'GREATER_EQUAL', 'TRUE', 'FALSE', 'EOF'
+'WRITELN', 'PROCEDURE', 'FUNCTION', 'EQUAL', 'NOT_EQUAL', 'LESS_THAN', 'LESS_EQUAL', 'GREATER_THAN', 'GREATER_EQUAL', 'TRUE', 'FALSE', 'EOF'
 
 class Token(object):
     """
@@ -70,6 +70,16 @@ class ProcSymbol(Symbol):
 
     __repr__ = __str__
 
+class FuncSymbol(Symbol):
+    def __init__(self, name, return_type, params=None):
+        super().__init__(name, return_type) # inherits returntype as FuncSymbol.type
+        self.params = params if params is not None else []
+
+    def __str__(self):
+        return f'<FunctionSymbol(name={self.name}, return_type={self.type}, params={self.params})>'
+
+    __repr__ = __str__
+
 class SymbolTable(object):
     def __init__(self, scope_name=None, parent_scope=None):
         "Parent scope being None means it is global scope"
@@ -95,14 +105,14 @@ class SymbolTable(object):
     def define(self, symbol):
         self._symbols[symbol.name] = symbol
 
-    def lookup(self, name, current_scope_only=False):
+    def lookup(self, name, current_scope_only=False, target_type=None):
         symbol = self._symbols.get(name)
         # 'symbol' is either an instance of the Symbol class or 'None'
-        if symbol is not None:
+        if symbol is not None and (target_type == None or isinstance(symbol,target_type)):
             return symbol
         
         if self.parent_scope is not None and not current_scope_only: # Recursively searches upwards through parent scopes until global
-            symbol = self.parent_scope.lookup(name)
+            symbol =  self.parent_scope.lookup(name, current_scope_only=False, target_type=target_type)
             return symbol
         
         return None
@@ -120,6 +130,7 @@ RESERVED_KEYWORDS = {
     'DO': Token(DO, 'DO'),
     'WRITELN': Token(WRITELN, 'WRITELN'),
     'PROCEDURE': Token(PROCEDURE, 'PROCEDURE'),
+    'FUNCTION': Token(FUNCTION, 'FUNCTION'),
     'INTEGER': Token(INTEGER, 'INTEGER'),
     'REAL': Token(REAL, 'REAL'),
     'BOOLEAN': Token(BOOLEAN, 'BOOLEAN'),

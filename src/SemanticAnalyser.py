@@ -11,6 +11,7 @@ class SemanticAnalyser(NodeVisitor):
         self.integer_type = self.current_scope.lookup(INTEGER)
         self.real_type = self.current_scope.lookup(REAL)
         self.boolean_type = self.current_scope.lookup(BOOLEAN)
+        self.string_type = self.current_scope.lookup(STRING)
 
     def semantic_error(self, message, node):
         raise SemanticError(message, node.line, node.column)
@@ -58,6 +59,28 @@ class SemanticAnalyser(NodeVisitor):
         self.visit(node.block)
         self.current_scope = outer_scope
         return proc_symbol
+    
+    def visit_FuncDecl(self, node):
+        func_name = node.name
+        if self.current_scope.lookup(func_name) is not None:
+            self.semantic_error(f"Duplicate declaration of function {func_name}", node.token)
+        
+        return_type_symbol = self.visit(node.return_type)
+        params = node.params
+        func_symbol = FuncSymbol(func_name, return_type_symbol, params)
+        self.current_scope.define(func_symbol)
+
+        outer_scope = self.current_scope
+        self.current_scope = SymbolTable(func_name, outer_scope) # Here we switch the current scope which persists through visiting AST children
+        for param in node.params:
+            self.visit(param)
+
+        # Pascal functions return by assigning to the function's own name.
+        self.current_scope.define(VarSymbol(func_name, return_type_symbol))
+
+        self.visit(node.block)
+        self.current_scope = outer_scope
+        return func_symbol
 
     def visit_Param(self, node):
         type_symbol = self.visit(node.type_node)
@@ -99,7 +122,29 @@ class SemanticAnalyser(NodeVisitor):
                 )
 
         return None
+    
+    def visit_FunctionCall(self, node):
+        func_symbol = self.current_scope.lookup(node.name, current_scope_only=False, target_type=FuncSymbol)
+        if func_symbol is None:
+            self.semantic_error(f"Function {node.name} is not defined", node)
 
+        if len(func_symbol.params) != len(node.params):
+            self.semantic_error(
+                f"Function {node.name} expected {len(func_symbol.params)} arguments, got {len(node.params)}",
+                node
+            )
+
+        for index, (param_node, arg_node) in enumerate(zip(func_symbol.params, node.params), start=1):
+            expected_type = self.visit(param_node.type_node)
+            actual_type = self.visit(arg_node)
+            if not self._assignment_compatible(expected_type, actual_type):
+                self.semantic_error(
+                    f"Type Error: function {node.name} argument {index} expected {expected_type}, got {actual_type}",
+                    arg_node
+                )
+
+        return func_symbol.type
+    
     def visit_If(self, node):
         condition_type = self.visit(node.condition)
         if condition_type != self.boolean_type:
@@ -129,6 +174,9 @@ class SemanticAnalyser(NodeVisitor):
             GREATER_THAN,
             GREATER_EQUAL,
         )
+
+        if node.value in (PLUS,EQUAL, NOT_EQUAL) and left_type == right_type == self.string_type: # handles string concat
+            return self.string_type if node.value == PLUS else self.boolean_type
 
         if node.value in arithmetic_ops:
             if not (self._is_numeric(left_type) and self._is_numeric(right_type)):
@@ -167,6 +215,9 @@ class SemanticAnalyser(NodeVisitor):
 
     def visit_BooleanNode(self,node):
         return self.boolean_type
+    
+    def visit_StringNode(self,node):
+        return self.string_type
 
     def visit_Var(self,node):
         var_name = node.name

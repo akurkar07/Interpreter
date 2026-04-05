@@ -7,6 +7,7 @@ class Interpreter(NodeVisitor):
     def __init__(self):
         self.scopes = [{}]  # first empty dict is GLOBAL
         self.procedures = {}
+        self.functions = {}
 
     def runtime_error(self, message, node):
         raise InterpreterError(message, node.line, node.column)
@@ -31,6 +32,22 @@ class Interpreter(NodeVisitor):
         self.visit(proc_decl.block)
         self.scopes.pop()
 
+    def visit_FunctionCall(self, node):
+        func_decl = self.functions[node.name]
+
+        call_scope = {}
+
+        for param_node, arg_node in zip(func_decl.params, node.params): # zips into (param, argument)
+            arg_value = self.visit(arg_node)
+            param_name = param_node.var_node.name
+            call_scope[param_name] = arg_value
+
+        self.scopes.append(call_scope)
+        self.visit(func_decl.block)
+        result = self.scopes[-1][func_decl.name]
+        self.scopes.pop()
+        return result
+
     def visit_If(self, node):
         condition = self.visit(node.condition)
         if condition:
@@ -47,6 +64,10 @@ class Interpreter(NodeVisitor):
 
     def visit_ProcDecl(self, node):
         self.procedures[node.name] = node
+        return None
+    
+    def visit_FuncDecl(self, node):
+        self.functions[node.name] = node
         return None
 
     def visit_BinaryOperation(self, node):
