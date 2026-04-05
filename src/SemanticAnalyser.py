@@ -89,8 +89,14 @@ class SemanticAnalyser(NodeVisitor):
                 node
             )
 
-        for arg_node in node.params:
-            self.visit(arg_node)
+        for index, (param_node, arg_node) in enumerate(zip(proc_symbol.params, node.params), start=1):
+            expected_type = self.visit(param_node.type_node)
+            actual_type = self.visit(arg_node)
+            if not self._assignment_compatible(expected_type, actual_type):
+                self.semantic_error(
+                    f"Type Error: procedure {node.name} argument {index} expected {expected_type}, got {actual_type}",
+                    arg_node
+                )
 
         return None
 
