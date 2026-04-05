@@ -55,6 +55,9 @@ class NodeVisitor():
         self.visit(node.condition)
         self.visit(node.statement)
 
+    def visit_Write(self, node):
+        self.visit(node.expression)
+
     def visit_WriteLn(self, node):
         self.visit(node.expression)
 

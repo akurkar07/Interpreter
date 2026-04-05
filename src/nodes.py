@@ -160,6 +160,15 @@ class While(Node):
     def __str__(self):
         return f"While(condition={type(self.condition).__name__}, statement={type(self.statement).__name__})"
   
+class Write(Node):
+    "Represents a WRITE statement"
+    def __init__(self, token, expression):
+        self.token = token
+        self.expression = expression
+
+    def __str__(self):
+        return f"Write(expression={type(self.expression).__name__})"
+
 class WriteLn(Node):
     "Represents a WRITELN statement"
     def __init__(self, token, expression):

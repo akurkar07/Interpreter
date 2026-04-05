@@ -62,6 +62,9 @@ class Interpreter(NodeVisitor):
     def visit_WriteLn(self, node):
         print(self.visit(node.expression))
 
+    def visit_Write(self, node):
+        print(self.visit(node.expression), end='')
+
     def visit_ProcDecl(self, node):
         self.procedures[node.name] = node
         return None

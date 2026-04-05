@@ -29,6 +29,7 @@
               | procedure_call_statement
               | if_statement
               | while_statement
+              | write_statement
               | writeln_statement
               | empty
 
@@ -39,6 +40,8 @@
     if_statement : IF expression THEN statement (ELSE statement)?
 
     while_statement : WHILE expression DO statement
+
+    write_statement : WRITE LPAREN expression RPAREN
 
     writeln_statement : WRITELN LPAREN expression RPAREN
 
