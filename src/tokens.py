@@ -60,10 +60,24 @@ class VarSymbol(Symbol):
     
     __repr__ = __str__
 
+class ProcSymbol(Symbol):
+    def __init__(self, name, params=None):
+        super().__init__(name)
+        self.params = params if params is not None else []
+
+    def __str__(self):
+        return f'<ProcedureSymbol(name={self.name}, params={self.params})>'
+
+    __repr__ = __str__
+
 class SymbolTable(object):
-    def __init__(self):
+    def __init__(self, scope_name=None, parent_scope=None):
+        "Parent scope being None means it is global scope"
+        self.name = scope_name if scope_name is not None else "global"
+        self.parent_scope = parent_scope
         self._symbols = {}
-        self._init_builtins()
+        if self.parent_scope is None:
+            self._init_builtins()
 
     def _init_builtins(self):
         self.define(BuiltinTypeSymbol('INTEGER'))
@@ -71,7 +85,8 @@ class SymbolTable(object):
         self.define(BuiltinTypeSymbol('BOOLEAN'))
 
     def __str__(self):
-        s = f'Symbols: {[value for value in self._symbols.values()]}'
+        if self.name == "global": return "global"
+        s = f'{self.name} | Parent Scope: {self.parent_scope} | Symbols: {[value for value in self._symbols.values()]}'
         return s
 
     __repr__ = __str__
@@ -79,10 +94,18 @@ class SymbolTable(object):
     def define(self, symbol):
         self._symbols[symbol.name] = symbol
 
-    def lookup(self, name):
+    def lookup(self, name, current_scope_only=False):
         symbol = self._symbols.get(name)
         # 'symbol' is either an instance of the Symbol class or 'None'
-        return symbol
+        if symbol is not None:
+            return symbol
+        
+        if self.parent_scope is not None and not current_scope_only: # Recursively searches upwards through parent scopes until global
+            symbol = self.parent_scope.lookup(name)
+            return symbol
+        
+        return None
+
 
 RESERVED_KEYWORDS = {
     'PROGRAM': Token(PROGRAM, 'PROGRAM'),

@@ -53,8 +53,8 @@ def run_script(path):
     interpreter = Interpreter()
     interpreter.visit(ast)
 
-    print("GLOBAL_SCOPE:", interpreter.GLOBAL_SCOPE)
-    print("SYMBOL_TABLE:", sem_analyser.symtab)
+    # print("GLOBAL_SCOPE:", interpreter.GLOBAL_SCOPE)
+    # print("SYMBOL_TABLE:", sem_analyser.current_scope)
 
 def print_help():
     print("Commands:")

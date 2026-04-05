@@ -11,6 +11,7 @@ class Parser(object):
     def __init__(self,lexer):
         self.lexer = lexer
         self.current_token = self.lexer.get_next_token()
+        self.next_token = self.lexer.get_next_token()
 
     def __str__(self):
         return f"Parser | Current Token: {self.current_token}"
@@ -20,7 +21,8 @@ class Parser(object):
 
     def eat(self, token_type):
         if self.current_token.type == token_type:
-            self.current_token = self.lexer.get_next_token()
+            self.current_token = self.next_token
+            self.next_token = self.lexer.get_next_token()
         else:
             raise ParserError(
                 f"Expected {token_type}, got {self.current_token.type}",
@@ -72,11 +74,8 @@ class Parser(object):
             self.eat(ID)
 
         self.eat(COLON)
-
         type_node = self.type_spec() # We determine their type
-        var_declarations = [
-            VarDecl(var_node, type_node) for var_node in var_nodes
-        ]
+        var_declarations = [VarDecl(var_node, type_node) for var_node in var_nodes]
         return var_declarations # then return the list of var declarations with that type
     
     def procedure_declaration(self):
@@ -119,11 +118,8 @@ class Parser(object):
             self.eat(ID)
 
         self.eat(COLON)
-
         type_node = self.type_spec()                # We determine their type
-        parameters = [
-            Param(var_node, type_node) for var_node in parameter_names
-        ]
+        parameters = [Param(var_node, type_node) for var_node in parameter_names]
         return parameters # then return the list of parameters with that type
 
 
@@ -178,6 +174,7 @@ class Parser(object):
         """
         statement : compound_statement
                 | assignment_statement
+                | procedure_call_statement
                 | if_statement
                 | while_statement
                 | writeln_statement
@@ -186,7 +183,10 @@ class Parser(object):
         if self.current_token.type == BEGIN:
             node = self.compound_statement()
         elif self.current_token.type == ID:
-            node = self.assignment_statement()
+            if self.next_token.type == ASSIGN:
+                node = self.assignment_statement()
+            else:
+                node = self.procedure_call_statement()
         elif self.current_token.type == IF:
             node = self.if_statement()
         elif self.current_token.type == WHILE:
@@ -208,6 +208,24 @@ class Parser(object):
         node = Assign(token, left, right)
         return node
     
+    def procedure_call_statement(self):
+        token = self.current_token
+        proc_name = self.current_token.value
+        self.eat(ID)
+
+        arguments = []
+
+        if self.current_token.type == LPAREN:
+            self.eat(LPAREN)
+            if self.current_token.type != RPAREN:
+                arguments.append(self.expression())
+                while self.current_token.type == COMMA:
+                    self.eat(COMMA)
+                    arguments.append(self.expression())
+            self.eat(RPAREN)
+
+        return ProcedureCall(token, proc_name, arguments)
+
     def if_statement(self):
         token = self.current_token
         self.eat(IF)

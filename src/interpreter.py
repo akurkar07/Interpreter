@@ -5,37 +5,51 @@ from visitor import NodeVisitor
 class Interpreter(NodeVisitor):
     """Base visitor class, not used directly but can be inherited from for more complex visitors"""
     def __init__(self):
-        self.GLOBAL_SCOPE = {}
+        self.scopes = [{}]  # first empty dict is GLOBAL
+        self.procedures = {}
 
     def runtime_error(self, message, node):
         raise InterpreterError(message, node.line, node.column)
-        
-    def visit_Assign(self,node):
+
+    def visit_Assign(self, node):
         var_name = node.left.name
         val = self.visit(node.right)
-        self.GLOBAL_SCOPE[var_name] = val
+        self.scopes[-1][var_name] = val
         return val
-    
-    def visit_If(self,node):
+
+    def visit_ProcedureCall(self, node):
+        proc_decl = self.procedures[node.name]
+
+        call_scope = {}
+
+        for param_node, arg_node in zip(proc_decl.params, node.params): # zips into (param, argument)
+            arg_value = self.visit(arg_node)
+            param_name = param_node.var_node.name
+            call_scope[param_name] = arg_value
+
+        self.scopes.append(call_scope)
+        self.visit(proc_decl.block)
+        self.scopes.pop()
+
+    def visit_If(self, node):
         condition = self.visit(node.condition)
-        if condition: 
+        if condition:
             self.visit(node.true_statement)
         elif node.false_statement is not None:
             self.visit(node.false_statement)
 
     def visit_While(self, node):
         while self.visit(node.condition):
-           self.visit(node.statement)
+            self.visit(node.statement)
 
     def visit_WriteLn(self, node):
         print(self.visit(node.expression))
 
-    def visit_Var(self,node):
-        if node.name not in self.GLOBAL_SCOPE:
-            self.runtime_error(f"Variable {node.name} is not defined", node)
-        return self.GLOBAL_SCOPE[node.name]
+    def visit_ProcDecl(self, node):
+        self.procedures[node.name] = node
+        return None
 
-    def visit_BinaryOperation(self,node):
+    def visit_BinaryOperation(self, node):
         leftvalue = self.visit(node.left)
         rightvalue = self.visit(node.right)
         if node.value == PLUS:
@@ -68,10 +82,17 @@ class Interpreter(NodeVisitor):
             return leftvalue >= rightvalue
         return None
 
-    def visit_UnaryOperation(self,node):
+    def visit_UnaryOperation(self, node):
         childvalue = self.visit(node.child) if node.child is not None else None
         if node.value == PLUS:
             return childvalue
-        elif node.value == MINUS:
+        if node.value == MINUS:
             return -childvalue
         return None
+
+    def visit_Var(self, node):
+        for scope in reversed(self.scopes):
+            if node.name in scope:
+                return scope[node.name]
+
+        self.runtime_error(f"Variable {node.name} is not defined", node)

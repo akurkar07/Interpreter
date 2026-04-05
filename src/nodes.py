@@ -50,7 +50,16 @@ class ProcDecl(Node):
         self.block = block
 
     def __str__(self):
-        return f"ProcDecl(params={len(self.params)}, block={type(self.block).__name__})"
+        return f"ProcDecl(name={self.name}, params={len(self.params)}, block={type(self.block).__name__})"
+
+class ProcedureCall(Node):
+    def __init__(self, token, name, params):
+        self.token = token
+        self.name = name
+        self.params = params
+
+    def __str__(self):
+        return f"ProcedureCall(name={self.name}, params={len(self.params)})"
 
 class Param(Node):
     def __init__(self, var_node, type_node):
@@ -87,7 +96,9 @@ class Assign(Node):
         self.right = right
     
     def __str__(self):
-        return f"Assign(left={getattr(self.left, 'name', None)}, op={self.value}, right={type(self.right).__name__ if self.right is not None else None})"
+        op = self.token.type if self.token is not None else None
+        right_type = type(self.right).__name__ if self.right is not None else None
+        return f"Assign(left={getattr(self.left, 'name', None)}, op={op}, right={right_type})"
     
 class Var(Node):
     """

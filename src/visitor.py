@@ -15,7 +15,12 @@ class NodeVisitor():
 
     def visit_VarDecl(self, node):
         return self.visit(node.type_node)
-    
+
+    def visit_ProcDecl(self, node):
+        for param in node.params:
+            self.visit(param)
+        return self.visit(node.block)
+
     def visit_Param(self, node):
         return self.visit(node.type_node)
 
@@ -29,6 +34,9 @@ class NodeVisitor():
     def visit_Assign(self, node):
         self.visit(node.right)
 
+    def visit_ProcedureCall(self, node):
+        return None
+
     def visit_If(self, node):
         self.visit(node.condition)
         self.visit(node.true_statement)
@@ -41,9 +49,6 @@ class NodeVisitor():
 
     def visit_WriteLn(self, node):
         self.visit(node.expression)
-
-    def visit_Var(self, node):
-        return None
 
     def visit_NoOp(self, node):
         return None
@@ -63,6 +68,9 @@ class NodeVisitor():
 
     def visit_BooleanNode(self, node):
         return node.value
+
+    def visit_Var(self, node):
+        return None
 
     def generic_visit(self, node):
         raise Exception(f'No visit_{type(node).__name__} method')
