@@ -201,6 +201,7 @@ class Parser(object):
                 | procedure_call_statement
                 | if_statement
                 | while_statement
+                | for_statement
                 | write_statement
                 | writeln_statement
                 | empty
@@ -216,6 +217,8 @@ class Parser(object):
             node = self.if_statement()
         elif self.current_token.type == WHILE:
             node = self.while_statement()
+        elif self.current_token.type == FOR:
+            node = self.for_statement()
         elif self.current_token.type == WRITE:
             node = self.write_statement()
         elif self.current_token.type == WRITELN:
@@ -274,6 +277,23 @@ class Parser(object):
         self.eat(DO)
         statement = self.statement()
         node = While(token, condition, statement)
+        return node
+    
+    def for_statement(self):
+        token = self.current_token
+        self.eat(FOR)
+        var = self.variable()
+        self.eat(ASSIGN)
+        start_expr = self.expression()
+        direction = self.current_token.type
+        if direction == TO:
+            self.eat(TO)
+        else:
+            self.eat(DOWNTO)
+        end_expr = self.expression()
+        self.eat(DO)
+        statement = self.statement()
+        node = For(token, var, start_expr, direction, end_expr, statement)
         return node
 
     def write_statement(self):

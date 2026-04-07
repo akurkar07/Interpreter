@@ -18,25 +18,18 @@ END;
 
 BEGIN
     limit := 10;
-    n := 0;
-    WHILE n < limit DO
-    BEGIN
-        spaces := 0;
-        WHILE spaces < limit - n DO
-        BEGIN
-            WRITE(' ');
-            spaces := spaces + 1;
-        END;
 
-        r := 0;
-        WHILE r <= n DO
+    FOR n := 0 TO limit - 1 DO
+    BEGIN
+        FOR spaces := 0 TO limit - n - 1 DO
+            WRITE(' ');
+
+        FOR r := 0 TO n DO
         BEGIN
             WRITE(choose(n, r));
             WRITE(' ');
-            r := r + 1;
         END;
 
         WRITELN('');
-        n := n + 1;
     END;
 END.

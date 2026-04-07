@@ -59,6 +59,15 @@ class Interpreter(NodeVisitor):
         while self.visit(node.condition):
             self.visit(node.statement)
 
+    def visit_For(self, node):
+        start_value = self.visit(node.start_expr)
+        self.scopes[-1][node.var.name] = start_value
+        end_value = self.visit(node.end_expr)
+        direction = 1 if node.direction == TO else -1
+        for i in range(start_value, end_value + direction, direction): # start_val TO end_val inclusive on TO, exclusive on DOWNTO 
+            self.scopes[-1][node.var.name] = i
+            self.visit(node.statement)
+
     def visit_WriteLn(self, node):
         print(self.visit(node.expression))
 

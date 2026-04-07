@@ -160,6 +160,25 @@ class While(Node):
     def __str__(self):
         return f"While(condition={type(self.condition).__name__}, statement={type(self.statement).__name__})"
   
+class For(Node):
+    def __init__(self, token, var, start_expr, direction, end_expr, statement):
+        self.token = token
+        self.var = var
+        self.start_expr = start_expr
+        self.direction = direction
+        self.end_expr = end_expr
+        self.statement = statement
+
+    def __str__(self):
+        return (
+            f"For(var={getattr(self.var, 'name', None)}, "
+            f"start={type(self.start_expr).__name__}, "
+            f"direction={getattr(self.direction, 'type', self.direction)}, "
+            f"end={type(self.end_expr).__name__}, "
+            f"statement={type(self.statement).__name__})"
+        )
+
+
 class Write(Node):
     "Represents a WRITE statement"
     def __init__(self, token, expression):

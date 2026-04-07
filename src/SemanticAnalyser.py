@@ -162,6 +162,20 @@ class SemanticAnalyser(NodeVisitor):
 
         self.visit(node.statement)
 
+    def visit_For(self, node):
+        var_type = self.visit(node.var)
+        if var_type != self.integer_type:
+            self.semantic_error("Type Error: FOR initial variable must evaluate to INTEGER", node)
+        start_expr_type = self.visit(node.start_expr)
+        if start_expr_type != self.integer_type:
+            self.semantic_error("Type Error: FOR start expression must evaluate to INTEGER", node)
+        end_expr_type = self.visit(node.end_expr)
+        if end_expr_type != self.integer_type:
+            self.semantic_error("Type Error: FOR end expression must evaluate to INTEGER", node)
+
+        self.visit(node.statement)
+        
+
     def visit_BinaryOperation(self, node):
         left_type = self.visit(node.left)
         right_type = self.visit(node.right)
