@@ -1,155 +1,424 @@
-# Interpreter
+﻿# Pascal Interpreter
 
-A small Pascal-like interpreter built as a learning project.
+A Pascal-like interpreter built from scratch in Python with zero external dependencies. It implements the core stages of a classic interpreter pipeline: lexical analysis, recursive-descent parsing, AST construction, semantic analysis with type checking, and a tree-walking runtime.
 
-Helpful docs:
+> **Suggested GitHub topics:** `interpreter`, `compiler`, `pascal`, `python`, `recursive-descent-parser`, `abstract-syntax-tree`, `type-checker`, `computer-science`
 
-- [Grammar guide](GRAMMAR_GUIDE.md)
-- [Grammar reference](grammar.txt)
+---
 
-Current pipeline:
+## Features
 
-`source text -> Lexer -> Parser -> AST -> SemanticAnalyser -> Interpreter`
+| Category | Details |
+|---|---|
+| **Lexer** | Tokenizes Pascal keywords, identifiers, numeric/string/boolean literals, operators, `{ }` block comments |
+| **Parser** | Recursive-descent parser producing a full AST |
+| **Semantic Analysis** | Symbol table with scoped lookups, type checking, duplicate/undeclared variable detection |
+| **Interpreter** | Tree-walking evaluator with scoped variable storage |
+| **Type System** | `INTEGER`, `REAL`, `BOOLEAN`, `STRING` with automatic widening (`INTEGER` -> `REAL`) |
+| **Control Flow** | `IF/THEN/ELSE`, `WHILE/DO`, `FOR/TO/DOWNTO` |
+| **Procedures & Functions** | Declaration, parameter passing, recursion, nested scopes |
+| **I/O** | `WRITE` and `WRITELN` statements |
+| **Strings** | String literals, concatenation (`+`), and equality comparison |
+| **Error Reporting** | Line and column numbers in all error messages (`LexerError`, `ParserError`, `SemanticError`, `InterpreterError`) |
 
-## Current Features
+---
 
-- Lexer for Pascal-like tokens (`PROGRAM`, `VAR`, `BEGIN/END`, arithmetic ops, assignment, comparisons, booleans, conditionals, loops, `WRITELN`, literals, identifiers)
-- Recursive-descent parser that builds an AST
-- AST node model in `nodes.py`
-- Visitor-based execution (`NodeVisitor` + `Interpreter`)
-- Semantic pass (`SemanticAnalyser`) with symbol table population, duplicate declaration checks, undeclared variable checks, assignment compatibility checks, boolean condition checks, and numeric operator checks
-- Script runner supports startup file arguments and interactive `:run <path>` execution
+## Architecture
 
-## Project Structure
+The interpreter follows a classic multi-stage pipeline:
 
-- [`src/main.py`](src/main.py): entry point and script command loop
-- [`src/Lexer.py`](src/Lexer.py): lexical analysis
-- [`src/Parser.py`](src/Parser.py): AST construction from tokens
-- [`src/nodes.py`](src/nodes.py): AST node classes
-- [`src/interpreter.py`](src/interpreter.py): base visitor and runtime interpreter
-- [`src/SemanticAnalyser.py`](src/SemanticAnalyser.py): semantic checks + symbol table population
-- [`src/tokens.py`](src/tokens.py): token constants, token class, symbol classes/table, and custom exceptions
-- [`grammar.txt`](grammar.txt): grammar notes
-- [`GRAMMAR_GUIDE.md`](GRAMMAR_GUIDE.md): short guide to reading the grammar notation
-- `tests/instructions.txt`: sample input program
-- `tests/a.pas`: additional sample script
+```mermaid
+flowchart LR
+    A["Source<br/><code>.pas</code>"]
 
-## Grammar (Implemented)
+    subgraph F["Frontend"]
+        direction LR
+        B["Lexer<br/>tokens"]
+        C["Parser<br/>AST"]
+    end
 
-See [`grammar.txt`](grammar.txt) for the standalone grammar file and [`GRAMMAR_GUIDE.md`](GRAMMAR_GUIDE.md) for notation help.
+    subgraph S["Static Analysis"]
+        direction LR
+        D["Semantic Analyser<br/>scope and type checks"]
+    end
 
-```text
-program : PROGRAM variable SEMI block DOT
+    subgraph R["Execution"]
+        direction LR
+        E["Interpreter<br/>output"]
+    end
 
-block : declarations compound_statement
+    A --> B
+    B --> C
+    C --> D
+    D --> E
 
-declarations : VAR (variable_declaration SEMI)+
-             | empty
+    classDef source fill:#1f2937,stroke:#94a3b8,stroke-width:1.5px,color:#f8fafc;
+    classDef front fill:#111827,stroke:#64748b,stroke-width:1.5px,color:#e5e7eb;
+    classDef middle fill:#0f172a,stroke:#60a5fa,stroke-width:1.5px,color:#eff6ff;
+    classDef runtime fill:#172554,stroke:#93c5fd,stroke-width:1.5px,color:#eff6ff;
+    classDef group fill:#0b1120,stroke:#475569,stroke-width:1px,color:#cbd5e1;
 
-variable_declaration : ID (COMMA ID)* COLON type_spec
+    class A source;
+    class B,C front;
+    class D middle;
+    class E runtime;
+    class F,S,R group;
 
-type_spec : INTEGER
-          | REAL
-          | BOOLEAN
-
-compound_statement : BEGIN statement_list END
-
-statement_list : statement
-               | statement SEMI statement_list
-
-statement : compound_statement
-          | assignment_statement
-          | if_statement
-          | while_statement
-          | writeln_statement
-          | empty
-
-assignment_statement : variable ASSIGN expression
-
-if_statement : IF expression THEN statement (ELSE statement)?
-
-while_statement : WHILE expression DO statement
-
-writeln_statement : WRITELN LPAREN expression RPAREN
-
-empty :
-
-expression : arithmetic_expr ((EQUAL
-                             | NOT_EQUAL
-                             | LESS_THAN
-                             | LESS_EQUAL
-                             | GREATER_THAN
-                             | GREATER_EQUAL) arithmetic_expr)?
-
-arithmetic_expr : term ((PLUS | MINUS) term)*
-
-term : factor ((MUL | INTEGER_DIV | FLOAT_DIV) factor)*
-
-factor : PLUS factor
-       | MINUS factor
-       | INTEGER_CONST
-       | REAL_CONST
-       | BOOLEAN_CONST
-       | LPAREN expression RPAREN
-       | variable
-
-variable : ID
 ```
 
-Note: standalone expression statements like `1+1` are not valid in this grammar.
+Each stage is cleanly separated into its own module:
 
-## Running
+| Stage | Module | Responsibility |
+|---|---|---|
+| **Lexical Analysis** | [`src/Lexer.py`](src/Lexer.py) | Converts source text into a stream of tokens |
+| **Parsing** | [`src/Parser.py`](src/Parser.py) | Builds an Abstract Syntax Tree from tokens using recursive descent |
+| **AST Nodes** | [`src/nodes.py`](src/nodes.py) | Defines all AST node classes (`Program`, `Block`, `BinaryOperation`, `If`, `While`, `For`, etc.) |
+| **Semantic Analysis** | [`src/SemanticAnalyser.py`](src/SemanticAnalyser.py) | Populates symbol tables, enforces type rules, validates declarations |
+| **Interpretation** | [`src/interpreter.py`](src/interpreter.py) | Tree-walking evaluator that executes the validated AST |
+| **Visitor Base** | [`src/visitor.py`](src/visitor.py) | Generic visitor pattern base class used by both the analyser and interpreter |
+| **Tokens & Symbols** | [`src/tokens.py`](src/tokens.py) | Token definitions, symbol classes, symbol table, and custom exception types |
+| **Entry Point** | [`src/main.py`](src/main.py) | CLI runner with interactive REPL and file/directory execution |
 
-1. Use Python 3.
-2. From the project folder:
+---
+
+## Getting Started
+
+### Prerequisites
+
+- **Python 3.6+** (no external packages required)
+
+### Run a Script
+
+```bash
+python src/main.py instructions/triangle.pas
+```
+
+### Run All Scripts in a Directory
+
+```bash
+python src/main.py instructions/
+```
+
+### Interactive Mode
 
 ```bash
 python src/main.py
 ```
 
-Behavior:
+```
+========================
+Alex's PascalInterpreter
+========================
 
-- Pass a script path as an argument to run immediately:
-
-```bash
-python src/main.py tests/instructions.txt
+script> :run instructions/functions.pas
+script> instructions/triangle.pas
+script> :help
+script> :q
 ```
 
-- Or start interactive mode and run scripts by path:
+---
+
+## Example Programs
+
+### Pascal's Triangle
+
+Recursion, functions, and nested loops:
+
+**[`instructions/triangle.pas`](instructions/triangle.pas)**
+
+```pascal
+PROGRAM triangle;
+
+VAR
+    n, r, limit, spaces : INTEGER;
+
+FUNCTION factorial(n : INTEGER) : INTEGER;
+BEGIN
+    IF n <= 1 THEN
+        factorial := 1
+    ELSE
+        factorial := n * factorial(n - 1);
+END;
+
+FUNCTION choose(n, r : INTEGER) : INTEGER;
+BEGIN
+    choose := factorial(n) DIV (factorial(n - r) * factorial(r));
+END;
+
+BEGIN
+    limit := 10;
+    FOR n := 0 TO limit - 1 DO
+    BEGIN
+        FOR spaces := 0 TO limit - n - 1 DO
+            WRITE(' ');
+        FOR r := 0 TO n DO
+        BEGIN
+            WRITE(choose(n, r));
+            WRITE(' ');
+        END;
+        WRITELN('');
+    END;
+END.
+```
+
+**Output:**
+
+```
+          1
+         1 1
+        1 2 1
+       1 3 3 1
+      1 4 6 4 1
+     1 5 10 10 5 1
+    1 6 15 20 15 6 1
+   1 7 21 35 35 21 7 1
+  1 8 28 56 70 56 28 8 1
+ 1 9 36 84 126 126 84 36 9 1
+```
+
+### Recursive Factorial
+
+**[`instructions/functions.pas`](instructions/functions.pas)**
+
+```pascal
+PROGRAM recursion;
+FUNCTION Factorial(n : INTEGER) : INTEGER;
+BEGIN
+    IF n = 1 THEN Factorial := 1
+    ELSE Factorial := n * Factorial(n - 1);
+END;
+
+BEGIN
+    WRITELN(Factorial(5));
+END.
+```
+
+**Output:**
+
+```
+120
+```
+
+### Recursive Procedure
+
+Countdown example:
+
+**[`instructions/recursion.pas`](instructions/recursion.pas)**
+
+```pascal
+PROGRAM recursion;
+PROCEDURE Recurse(depth : INTEGER);
+BEGIN
+    WRITELN(depth);
+    IF depth > 0 THEN
+        Recurse(depth - 1);
+END;
+
+BEGIN
+    Recurse(5);
+END.
+```
+
+**Output:**
+
+```
+5
+4
+3
+2
+1
+0
+```
+
+### Recursive Procedure with String Concatenation
+
+**[`instructions/string_recursion.pas`](instructions/string_recursion.pas)**
+
+```pascal
+PROGRAM string_recursion;
+PROCEDURE Recurse(str : STRING; depth : INTEGER);
+BEGIN
+    WRITELN(str + 'a');
+    IF depth > 0 THEN
+        Recurse(str + 'a', depth - 1);
+END;
+
+BEGIN
+    Recurse('', 5);
+END.
+```
+
+**Output:**
+
+```
+a
+aa
+aaa
+aaaa
+aaaaa
+aaaaaa
+```
+
+---
+
+## Grammar
+
+The language is defined by a formal BNF/EBNF grammar. See [`grammar.txt`](grammar.txt) for the full specification and [`GRAMMAR_GUIDE.md`](GRAMMAR_GUIDE.md) for a guide on reading the notation.
+
+<details>
+<summary><strong>Click to expand full grammar</strong></summary>
+
+```
+program             : PROGRAM variable SEMI block DOT
+
+block               : declarations compound_statement
+
+declarations        : (VAR (variable_declaration SEMI)+)?
+                      (procedure_declaration | function_declaration)*
+
+variable_declaration: ID (COMMA ID)* COLON type_spec
+
+procedure_declaration: PROCEDURE ID (LPAREN parameter_list RPAREN)? SEMI block SEMI
+
+function_declaration : FUNCTION ID (LPAREN parameter_list RPAREN)? COLON type_spec SEMI block SEMI
+
+parameter_list      : parameters (SEMI parameters)*
+
+parameters          : ID (COMMA ID)* COLON type_spec
+
+type_spec           : INTEGER | REAL | BOOLEAN | STRING
+
+compound_statement  : BEGIN statement_list END
+
+statement_list      : statement (SEMI statement_list)?
+
+statement           : compound_statement
+                    | assignment_statement
+                    | procedure_call_statement
+                    | if_statement
+                    | while_statement
+                    | for_statement
+                    | write_statement
+                    | writeln_statement
+                    | empty
+
+assignment_statement: variable ASSIGN expression
+
+procedure_call_statement: ID (LPAREN (expression (COMMA expression)*)? RPAREN)?
+
+if_statement        : IF expression THEN statement (ELSE statement)?
+
+while_statement     : WHILE expression DO statement
+
+for_statement       : FOR variable ASSIGN expression (TO | DOWNTO) expression DO statement
+
+write_statement     : WRITE LPAREN expression RPAREN
+
+writeln_statement   : WRITELN LPAREN expression RPAREN
+
+expression          : arithmetic_expr ((EQUAL | NOT_EQUAL | LESS_THAN
+                    | LESS_EQUAL | GREATER_THAN | GREATER_EQUAL) arithmetic_expr)?
+
+arithmetic_expr     : term ((PLUS | MINUS) term)*
+
+term                : factor ((MUL | INTEGER_DIV | FLOAT_DIV) factor)*
+
+factor              : PLUS factor
+                    | MINUS factor
+                    | INTEGER_CONST | REAL_CONST | BOOLEAN_CONST | STRING_CONST
+                    | function_call
+                    | LPAREN expression RPAREN
+                    | variable
+
+function_call       : ID LPAREN (expression (COMMA expression)*)? RPAREN
+
+variable            : ID
+```
+
+</details>
+
+---
+
+## Semantic Rules
+
+The semantic analyser enforces these rules **before** execution:
+
+- **Declaration required** - variables must be declared before use
+- **No duplicates** - duplicate variable, procedure, and function declarations are rejected
+- **Boolean conditions** - `IF` and `WHILE` conditions must evaluate to `BOOLEAN`
+- **FOR loops** - loop variable, start, and end expressions must be `INTEGER`
+- **Integer division** - `DIV` requires both operands to be `INTEGER`
+- **Float division** - `/` always yields `REAL`
+- **Arithmetic promotion** - `+`, `-`, `*` yield `INTEGER` when both operands are `INTEGER`, otherwise `REAL`
+- **Comparison operators** - yield `BOOLEAN`; operands must be numeric or both strings for `=` and `<>`
+- **String operations** - `+` concatenates strings; `=` and `<>` compare strings
+- **Assignment compatibility** - exact type match or widening `INTEGER` -> `REAL`
+- **Procedure/function arity** - argument count must match parameter count
+- **Argument types** - each argument must be assignment-compatible with its parameter
+
+---
+
+## Error Reporting
+
+All errors include line and column numbers for easier debugging:
+
+```
+line 5, column 12: Variable X is not defined
+line 8, column 1: Type Error: IF condition must evaluate to BOOLEAN
+line 3, column 20: Expected SEMI, got DOT
+```
+
+Error types:
+
+| Error Class | Source | Examples |
+|---|---|---|
+| `LexerError` | Lexical analysis | Invalid characters, unterminated strings/comments |
+| `ParserError` | Parsing | Unexpected tokens, missing delimiters |
+| `SemanticError` | Semantic analysis | Type mismatches, undeclared variables, duplicate declarations |
+| `InterpreterError` | Runtime | Division by zero, undefined variables at runtime |
+
+---
+
+## Project Structure
 
 ```text
-script> :run tests/instructions.txt
+Interpreter/
+|-- src/
+|   |-- main.py               # CLI entry point and interactive REPL
+|   |-- Lexer.py              # Lexical analyser (tokenizer)
+|   |-- Parser.py             # Recursive-descent parser -> AST
+|   |-- nodes.py              # AST node class definitions
+|   |-- SemanticAnalyser.py   # Type checking and symbol table logic
+|   |-- interpreter.py        # Tree-walking runtime evaluator
+|   |-- visitor.py            # Generic visitor pattern base
+|   `-- tokens.py             # Token types, symbols, and exceptions
+|-- instructions/
+|   |-- triangle.pas          # Pascal's Triangle demo
+|   |-- functions.pas         # Recursive factorial
+|   |-- recursion.pas         # Recursive procedure
+|   `-- string_recursion.pas  # String concatenation with recursion
+|-- grammar.txt               # Formal language grammar (EBNF)
+|-- GRAMMAR_GUIDE.md          # How to read the grammar notation
+|-- syntax_guide.pas          # Full Pascal syntax reference
+`-- README.md
 ```
 
-- You can also type a path directly at the prompt:
+---
 
-```text
-script> tests/a.pas
-```
+## Roadmap
 
-- Type `:q` to quit
+- [ ] Nested `BEGIN/END` scoping for local variables
+- [ ] Arrays and record types
+- [ ] `REPEAT/UNTIL` loops
+- [ ] `CASE` statements
+- [ ] `CONST` declarations
+- [ ] Boolean operators (`AND`, `OR`, `NOT`)
+- [ ] Multi-argument `WRITE`/`WRITELN`
+- [ ] Source-level debugger with stepping and breakpoints
 
-## Semantic Rules Currently Enforced
+---
 
-- Variables must be declared before use
-- Duplicate variable declarations are rejected
-- `IF` and `WHILE` conditions must evaluate to `BOOLEAN`
-- `DIV` requires `INTEGER` operands
-- `/` (`FLOAT_DIV`) yields `REAL`
-- `+`, `-`, `*` yield `INTEGER` only when both operands are `INTEGER`, otherwise `REAL`
-- comparison operators yield `BOOLEAN`
-- Assignments allow exact type match and widening `INTEGER -> REAL`
+## Licence
 
-## Errors
+This project is licensed under the [MIT License](LICENSE).
 
-The project currently uses:
-
-- `LexerError`
-- `ParserError`
-- `InterpreterError` (also used by semantic analysis at the moment)
-
-## Current Limitations
-
-- No procedures/functions yet
-- No nested scopes yet
-- Semantic errors are not split into a dedicated `SemanticError` type yet

@@ -133,4 +133,4 @@ The parser methods in [`src/Parser.py`](src/Parser.py) are the implementation of
 So the grammar is both:
 
 - a description of the language
-- a guide for how the recursive-descent parser is organized
+- a guide for how the recursive-descent parser is organised
