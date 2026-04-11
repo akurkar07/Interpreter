@@ -6,6 +6,14 @@ A Pascal-like interpreter built from scratch in Python with zero external depend
 
 ---
 
+## Why This Project
+
+I became fascinated with compilers and interpreters after learning C and ARM32 assembly. I created this project to unravel layers of abstraction that most of us take for granted and to learn how a piece of text turns into instructions that can be executed.
+
+It is also meant to be a practical systems-style project rather than just a toy parser. The repository focuses on clear stage separation, explicit grammar rules, scoped symbol tables, type checking, and representative example programs so the implementation is easy to inspect, extend, and discuss.
+
+---
+
 ## Features
 
 | Category | Details |
@@ -22,6 +30,44 @@ A Pascal-like interpreter built from scratch in Python with zero external depend
 | **Error Reporting** | Line and column numbers in all error messages (`LexerError`, `ParserError`, `SemanticError`, `InterpreterError`) |
 
 ---
+
+## Getting Started
+
+### Prerequisites
+
+- **Python 3.6+** (no external packages required)
+
+### Run a Script
+
+```bash
+python src/main.py instructions/triangle.pas
+```
+
+### Run All Scripts in a Directory
+
+```bash
+python src/main.py instructions/
+```
+
+### Interactive Mode
+
+```bash
+python src/main.py
+```
+
+```
+========================
+Alex's PascalInterpreter
+========================
+
+script> :run instructions/functions.pas
+script> instructions/triangle.pas
+script> :help
+script> :q
+```
+
+---
+
 
 ## Architecture
 
@@ -78,43 +124,6 @@ Each stage is cleanly separated into its own module:
 | **Visitor Base** | [`src/visitor.py`](src/visitor.py) | Generic visitor pattern base class used by both the analyser and interpreter |
 | **Tokens & Symbols** | [`src/tokens.py`](src/tokens.py) | Token definitions, symbol classes, symbol table, and custom exception types |
 | **Entry Point** | [`src/main.py`](src/main.py) | CLI runner with interactive REPL and file/directory execution |
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- **Python 3.6+** (no external packages required)
-
-### Run a Script
-
-```bash
-python src/main.py instructions/triangle.pas
-```
-
-### Run All Scripts in a Directory
-
-```bash
-python src/main.py instructions/
-```
-
-### Interactive Mode
-
-```bash
-python src/main.py
-```
-
-```
-========================
-Alex's PascalInterpreter
-========================
-
-script> :run instructions/functions.pas
-script> instructions/triangle.pas
-script> :help
-script> :q
-```
 
 ---
 
@@ -421,4 +430,3 @@ Interpreter/
 ## Licence
 
 This project is licensed under the [MIT License](LICENSE).
-
