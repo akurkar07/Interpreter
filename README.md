@@ -10,7 +10,7 @@ A **fully functional interpreter** for a Pascal-like language, built from scratc
 
 | Category | Details |
 |---|---|
-| **Lexer** | Tokenizes Pascal keywords, identifiers, numeric/string/boolean literals, operators, comments |
+| **Lexer** | Tokenizes Pascal keywords, identifiers, numeric/string/boolean literals, operators, `{ }` block comments |
 | **Parser** | Recursive-descent parser producing a full AST |
 | **Semantic Analysis** | Symbol table with scoped lookups, type checking, duplicate/undeclared variable detection |
 | **Interpreter** | Tree-walking evaluator with scoped variable storage |
@@ -163,6 +163,35 @@ END.
 
 ```
 120
+```
+
+### Recursive Procedure (countdown)
+
+**[`instructions/recursion.pas`](instructions/recursion.pas)**
+
+```pascal
+PROGRAM recursion;
+PROCEDURE Recurse(depth : INTEGER);
+BEGIN
+    WRITELN(depth);
+    IF depth > 0 THEN
+        Recurse(depth - 1);
+END;
+
+BEGIN
+    Recurse(5);
+END.
+```
+
+**Output:**
+
+```
+5
+4
+3
+2
+1
+0
 ```
 
 ### Recursive Procedure with String Concatenation
