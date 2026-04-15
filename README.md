@@ -2,8 +2,6 @@
 
 A Pascal-like interpreter built from scratch in Python with zero external dependencies. It implements the core stages of a classic interpreter pipeline: lexical analysis, recursive-descent parsing, AST construction, semantic analysis with type checking, and a tree-walking runtime.
 
-> **Suggested GitHub topics:** `interpreter`, `compiler`, `pascal`, `python`, `recursive-descent-parser`, `abstract-syntax-tree`, `type-checker`, `computer-science`
-
 ---
 
 ## Why This Project
