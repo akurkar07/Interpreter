@@ -16,7 +16,7 @@ It is also meant to be a practical systems-style project rather than just a toy 
 
 | Category | Details |
 |---|---|
-| **Lexer** | Tokenizes Pascal keywords, identifiers, numeric/string/boolean literals, operators, `{ }` block comments |
+| **Lexer** | Tokenises Pascal keywords, identifiers, numeric/string/boolean literals, operators, `{ }` block comments |
 | **Parser** | Recursive-descent parser producing a full AST |
 | **Semantic Analysis** | Symbol table with scoped lookups, type checking, duplicate/undeclared variable detection |
 | **Interpreter** | Tree-walking evaluator with scoped variable storage |
@@ -392,7 +392,7 @@ Error types:
 Interpreter/
 |-- src/
 |   |-- main.py               # CLI entry point and interactive REPL
-|   |-- Lexer.py              # Lexical analyser (tokenizer)
+|   |-- Lexer.py              # Lexical analyser (tokeniser)
 |   |-- Parser.py             # Recursive-descent parser -> AST
 |   |-- nodes.py              # AST node class definitions
 |   |-- SemanticAnalyser.py   # Type checking and symbol table logic
