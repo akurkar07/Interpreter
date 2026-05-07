@@ -38,10 +38,14 @@ class BytecodeVisitor(NodeVisitor):
 
         self.emit(f"JMP_IF_FALSE {else_label}")
         self.visit(node.true_statement)
-        self.emit(f"JMP {end_label}")
+        if node.false_statement is not None:
+            self.emit(f"JMP {end_label}")
+            self.emit(f"LABEL {else_label}")
+            self.visit(node.false_statement)
+            self.emit(f"LABEL {end_label}")
+            return
+
         self.emit(f"LABEL {else_label}")
-        self.visit(node.false_statement)
-        self.emit(f"LABEL {end_label}")
         
     def visit_While(self, node):
         start_label = f"start_{self.label_count}" # create the labels with the label number so they are distinct
