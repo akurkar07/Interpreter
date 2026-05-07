@@ -3,7 +3,7 @@ from visitor import NodeVisitor
 
 
 class Interpreter(NodeVisitor):
-    """Base visitor class, not used directly but can be inherited from for more complex visitors"""
+    """Executes the program after it has been type-checked by the SemAnalyser"""
     def __init__(self):
         self.scopes = [{}]  # first empty dict is GLOBAL
         self.procedures = {}

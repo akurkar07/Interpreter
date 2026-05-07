@@ -1,27 +1,38 @@
 import sys
 from pathlib import Path
 
-from tokens import LexerError, ParserError, SemanticError, InterpreterError
+from tokens import LexerError, ParserError, SemanticError, InterpreterError, BytecodeError
 from Lexer import Lexer
 from Parser import Parser
 from SemanticAnalyser import SemanticAnalyser
 from interpreter import Interpreter
+from bytecode import BytecodeVisitor
 
-def run_path(path_str):
+SCRIPT_SUFFIXES = {".pas", ".txt"}
+ACTION_LABELS = {
+    "run": "Running",
+    "compile": "Compiling",
+    "vm": "Running on VM",
+}
+
+
+def execute_path(path_str, action):
     path = Path(path_str)
+    handler = ACTION_HANDLERS.get(action)
+
+    if handler is None:
+        raise ValueError(f"Unknown action: {action}")
 
     if path.is_file():
-        if path.suffix in {".pas", ".txt"}:
-            run_script(path)
+        if path.suffix in SCRIPT_SUFFIXES:
+            handler(path)
             return
-        else:
-            raise ValueError(f"Unsupported file type: {path.suffix}. Expected .pas or .txt")
- 
+        raise ValueError(f"Unsupported file type: {path.suffix}. Expected .pas or .txt")
 
     if path.is_dir():
         files = sorted(
             p for p in path.iterdir()
-            if p.is_file() and p.suffix in {".pas", ".txt"}
+            if p.is_file() and p.suffix in SCRIPT_SUFFIXES
         )
 
         if not files:
@@ -29,26 +40,32 @@ def run_path(path_str):
             return
 
         for file_path in files:
-            print(f"\n=== Running {file_path} ===")
+            print(f"\n=== {ACTION_LABELS[action]} {file_path} ===")
             try:
-                run_script(file_path)
-            except (LexerError, ParserError, SemanticError, InterpreterError) as e:
+                handler(file_path)
+            except (LexerError, ParserError, SemanticError, InterpreterError, BytecodeError, NotImplementedError) as e:
                 print(f"Error in {file_path}: {e}")
         return
 
     raise FileNotFoundError(f"Path not found: {path}")
 
-def run_script(path):
+
+def load_program(path):
     with open(path, "r", encoding="utf-8") as instruction_file:
         text = instruction_file.read()
 
     lexer = Lexer(text)
     parser = Parser(lexer)
     ast = parser.parse()
-    print(f"Running {ast.name.name}...")
 
     sem_analyser = SemanticAnalyser()
     sem_analyser.visit(ast)
+    return ast
+
+
+def run_script(path):
+    ast = load_program(path)
+    print(f"Running {ast.name.name}...")
 
     interpreter = Interpreter()
     interpreter.visit(ast)
@@ -56,11 +73,38 @@ def run_script(path):
     # print("GLOBAL_SCOPE:", interpreter.GLOBAL_SCOPE)
     # print("SYMBOL_TABLE:", sem_analyser.current_scope)
 
+
+def compile_script(path):
+    ast = load_program(path)
+    bytecode_visitor = BytecodeVisitor()
+    bytecode_visitor.visit(ast)
+    output_path = path.with_suffix(".pbc")
+
+    with open(output_path, "w", encoding="utf-8") as bytecode_file:
+        bytecode_file.write(bytecode_visitor.bytecode)
+
+    print(f"Wrote bytecode to {output_path}")
+
+
+def run_vm_script(path):
+    ast = load_program(path)
+    raise NotImplementedError("VM backend not implemented yet")
+
+
+ACTION_HANDLERS = {
+    "run": run_script,
+    "compile": compile_script,
+    "vm": run_vm_script,
+}
+
+
 def print_help():
     print("Commands:")
     print("  :help / :h           Show this help message")
     print("  :quit / :q           Quit")
     print("  :run <path>          Run a Pascal script file or directory")
+    print("  :vm <path>           Run a Pascal script file or directory in VM using bytecode")
+    print("  :compile <path>      Emit a Pascal script or directory as bytecode without running it")
     print("  <path>               Run a Pascal script file or directory")
 
 
@@ -68,28 +112,41 @@ def parse_command(raw):
     command = raw.strip()
     if not command:
         return None, None
-    if command in (":help",":h"):
-        return "help", None
-    if command in (":quit",":q"):
-        return "quit", None
-    if command.startswith(":run "):
-        path = command[5:].strip()
-        return ("run", path) if path else (None, None)
-    return "run", command
+
+    aliases = {
+        ":help": "help",
+        ":h": "help",
+        ":quit": "quit",
+        ":q": "quit",
+    }
+    if command in aliases:
+        return aliases[command], None
+
+    if not command.startswith(":"):
+        return "run", command
+
+    verb, _, rest = command.partition(" ")
+    path = rest.strip()
+
+    if verb in {":run", ":compile", ":vm"} and path:
+        return verb[1:], path
+
+    return None, None
 
 
 def main():
     print("="*24 + "\nAlex's PascalInterpreter\n" + "="*24)
 
+    pending_action = "run"
     pending_path = sys.argv[1] if len(sys.argv) > 1 else None
 
     while True:
         if pending_path is None:
-            try: 
+            try:
                 raw = input("\nscript> ")
-            except KeyboardInterrupt: # CTRL + C
+            except KeyboardInterrupt:  # CTRL + C
                 continue
-            except EOFError: # CTRL + Z
+            except EOFError:  # CTRL + Z
                 print("Quitting due to EOFError")
                 quit()
 
@@ -103,19 +160,22 @@ def main():
             if action == "quit":
                 print("Quitting")
                 return
+
+            pending_action = action
             pending_path = path
 
         try:
-            run_path(pending_path)
-        except (LexerError, ParserError, SemanticError, InterpreterError) as e: # MY ERRORS
+            execute_path(pending_path, pending_action)
+        except (LexerError, ParserError, SemanticError, InterpreterError, BytecodeError, NotImplementedError) as e:
             print(f"Error: {e}")
         except ValueError as e:
             print(f"Error: {e}")
-        except OSError as e:                                                    # Can't find the file
+        except OSError as e:
             print(f"Error reading '{pending_path}': {e}")
-        except KeyboardInterrupt:                                               # CTRL + C during execution
+        except KeyboardInterrupt:
             print("\nExecution Cancelled")
         finally:
+            pending_action = "run"
             pending_path = None
 
 

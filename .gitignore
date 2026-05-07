@@ -12,3 +12,6 @@ tests/
 # Local development files
 TODO.md
 TODO
+
+# bytecode
+*.pbc

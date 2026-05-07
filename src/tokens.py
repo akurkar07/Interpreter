@@ -156,3 +156,7 @@ class SemanticError(PascalError):
 
 class InterpreterError(PascalError):
     pass
+
+
+class BytecodeError(PascalError):
+    pass
