@@ -13,6 +13,15 @@ class BytecodeVisitor(NodeVisitor):
 
     def emit(self, line):
         self.bytecode += f"{line}\n"
+        
+    def visit_Program(self, node):
+        self.emit("JMP __main\n")
+        # expand self.visit(node.block) to avoid encoding main jump into every block
+        for declaration in node.block.declarations: 
+            self.visit(declaration)
+        self.emit("LABEL __main")
+        self.visit(node.block.compound_statement)
+        self.emit("HALT")
 
     def visit_Assign(self, node):
         self.visit(node.right)
@@ -96,7 +105,7 @@ class BytecodeVisitor(NodeVisitor):
             self.emit(f"STORE {param.var_node.name}")
 
         self.visit(node.block) # emits the body of the procedure
-        self.emit("RET") # returns nothing
+        self.emit("RET\n") # returns nothing
     
     def visit_FuncDecl(self, node):
         self.emit(f"LABEL {node.name}")
@@ -105,7 +114,7 @@ class BytecodeVisitor(NodeVisitor):
             self.emit(f"STORE {param.var_node.name}")
 
         self.visit(node.block) # emits the body of the function
-        self.emit("RET")
+        self.emit("RET\n")
     
     BINARY_OPCODE_MAP = {
         PLUS: "ADD",
