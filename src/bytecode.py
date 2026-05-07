@@ -93,9 +93,11 @@ class BytecodeVisitor(NodeVisitor):
         self.emit(f"LABEL {end_label}")
 
     def visit_WriteLn(self, node):
+        self.visit(node.expression)
         self.emit("WRITELN")
 
     def visit_Write(self, node):
+        self.visit(node.expression)
         self.emit("WRITE")
 
     def visit_ProcDecl(self, node):
@@ -114,6 +116,7 @@ class BytecodeVisitor(NodeVisitor):
             self.emit(f"STORE {param.var_node.name}")
 
         self.visit(node.block) # emits the body of the function
+        self.emit(f"LOAD {node.name}")
         self.emit("RET\n")
     
     BINARY_OPCODE_MAP = {
