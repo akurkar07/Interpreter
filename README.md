@@ -1,6 +1,6 @@
 ﻿# Pascal Interpreter
 
-A Pascal-like interpreter built from scratch in Python with zero external dependencies. It implements the core stages of a classic interpreter pipeline: lexical analysis, recursive-descent parsing, AST construction, semantic analysis with type checking, and a tree-walking runtime.
+A Pascal-like language project built from scratch in Python with zero external dependencies. It currently combines a shared frontend, a working tree-walking interpreter, and an in-progress bytecode compiler that emits textual `.pbc` files for a future VM backend.
 
 ---
 
@@ -20,12 +20,14 @@ It is also meant to be a practical systems-style project rather than just a toy 
 | **Parser** | Recursive-descent parser producing a full AST |
 | **Semantic Analysis** | Symbol table with scoped lookups, type checking, duplicate/undeclared variable detection |
 | **Interpreter** | Tree-walking evaluator with scoped variable storage |
+| **Bytecode Compiler** | Stack-based bytecode emitter that writes textual `.pbc` files |
 | **Type System** | `INTEGER`, `REAL`, `BOOLEAN`, `STRING` with automatic widening (`INTEGER` -> `REAL`) |
 | **Control Flow** | `IF/THEN/ELSE`, `WHILE/DO`, `FOR/TO/DOWNTO` |
 | **Procedures & Functions** | Declaration, parameter passing, recursion, nested scopes |
 | **I/O** | `WRITE` and `WRITELN` statements |
 | **Strings** | String literals, concatenation (`+`), and equality comparison |
-| **Error Reporting** | Line and column numbers in all error messages (`LexerError`, `ParserError`, `SemanticError`, `InterpreterError`) |
+| **CLI Modes** | Run source files, compile source files to bytecode, or target a reserved VM path |
+| **Error Reporting** | Line and column numbers in all error messages (`LexerError`, `ParserError`, `SemanticError`, `InterpreterError`, `BytecodeError`) |
 
 ---
 
@@ -47,6 +49,19 @@ python src/main.py instructions/triangle.pas
 python src/main.py instructions/
 ```
 
+### Compile to Bytecode
+
+```bash
+python src/main.py
+```
+
+```text
+script> :compile instructions/triangle.pas
+Wrote bytecode to instructions/triangle.pbc
+```
+
+Compiled bytecode is written next to the source file using the `.pbc` extension. The `:vm` command path exists in the CLI, but the VM backend itself is not implemented yet.
+
 ### Interactive Mode
 
 ```bash
@@ -59,6 +74,7 @@ Alex's PascalInterpreter
 ========================
 
 script> :run instructions/functions.pas
+script> :compile instructions/triangle.pas
 script> instructions/triangle.pas
 script> :help
 script> :q
@@ -69,7 +85,7 @@ script> :q
 
 ## Architecture
 
-The interpreter follows a classic multi-stage pipeline:
+The project uses a shared frontend with two backends:
 
 ```mermaid
 flowchart LR
@@ -86,15 +102,17 @@ flowchart LR
         D["Semantic Analyser<br/>scope and type checks"]
     end
 
-    subgraph R["Execution"]
+    subgraph R["Backends"]
         direction LR
         E["Interpreter<br/>output"]
+        G["Bytecode Compiler<br/><code>.pbc</code>"]
     end
 
     A --> B
     B --> C
     C --> D
     D --> E
+    D --> G
 
     classDef source fill:#1f2937,stroke:#94a3b8,stroke-width:1.5px,color:#f8fafc;
     classDef front fill:#111827,stroke:#64748b,stroke-width:1.5px,color:#e5e7eb;
@@ -105,7 +123,7 @@ flowchart LR
     class A source;
     class B,C front;
     class D middle;
-    class E runtime;
+    class E,G runtime;
     class F,S,R group;
 
 ```
@@ -119,9 +137,16 @@ Each stage is cleanly separated into its own module:
 | **AST Nodes** | [`src/nodes.py`](src/nodes.py) | Defines all AST node classes (`Program`, `Block`, `BinaryOperation`, `If`, `While`, `For`, etc.) |
 | **Semantic Analysis** | [`src/SemanticAnalyser.py`](src/SemanticAnalyser.py) | Populates symbol tables, enforces type rules, validates declarations |
 | **Interpretation** | [`src/interpreter.py`](src/interpreter.py) | Tree-walking evaluator that executes the validated AST |
+| **Bytecode Emission** | [`src/bytecode.py`](src/bytecode.py) | Emits stack-based textual bytecode for the future VM backend |
 | **Visitor Base** | [`src/visitor.py`](src/visitor.py) | Generic visitor pattern base class used by both the analyser and interpreter |
 | **Tokens & Symbols** | [`src/tokens.py`](src/tokens.py) | Token definitions, symbol classes, symbol table, and custom exception types |
-| **Entry Point** | [`src/main.py`](src/main.py) | CLI runner with interactive REPL and file/directory execution |
+| **Entry Point** | [`src/main.py`](src/main.py) | CLI runner with interactive REPL, file/directory execution, and bytecode compilation |
+
+Today that means:
+
+- `:run <path>` executes Pascal source through the interpreter
+- `:compile <path>` emits `.pbc` bytecode files alongside the source
+- `:vm <path>` is wired into the CLI but currently raises `NotImplementedError`
 
 ---
 
@@ -266,6 +291,15 @@ aaaaa
 aaaaaa
 ```
 
+### Bytecode Showcase
+
+The repo also includes a larger feature-coverage program and its current emitted bytecode:
+
+- [`instructions/FeatureShowcase.pas`](instructions/FeatureShowcase.pas)
+- [`instructions/FeatureShowcase.pbc`](instructions/FeatureShowcase.pbc)
+- [`BYTECODE.md`](BYTECODE.md) for the bytecode language design
+- [`PLAN.md`](PLAN.md) for the current compiler / VM roadmap
+
 ---
 
 ## Grammar
@@ -383,6 +417,7 @@ Error types:
 | `ParserError` | Parsing | Unexpected tokens, missing delimiters |
 | `SemanticError` | Semantic analysis | Type mismatches, undeclared variables, duplicate declarations |
 | `InterpreterError` | Runtime | Division by zero, undefined variables at runtime |
+| `BytecodeError` | Bytecode emission | Unsupported constructs or invalid bytecode-generation state |
 
 ---
 
@@ -397,13 +432,18 @@ Interpreter/
 |   |-- nodes.py              # AST node class definitions
 |   |-- SemanticAnalyser.py   # Type checking and symbol table logic
 |   |-- interpreter.py        # Tree-walking runtime evaluator
+|   |-- bytecode.py           # Stack-based bytecode emitter (.pbc output)
 |   |-- visitor.py            # Generic visitor pattern base
 |   `-- tokens.py             # Token types, symbols, and exceptions
 |-- instructions/
+|   |-- FeatureShowcase.pas   # Large feature-coverage example program
+|   |-- FeatureShowcase.pbc   # Emitted bytecode output for inspection
 |   |-- triangle.pas          # Pascal's Triangle demo
 |   |-- functions.pas         # Recursive factorial
 |   |-- recursion.pas         # Recursive procedure
 |   `-- string_recursion.pas  # String concatenation with recursion
+|-- BYTECODE.md               # Bytecode language structure and instruction design
+|-- PLAN.md                   # Ongoing compiler / VM implementation notes
 |-- grammar.txt               # Formal language grammar (EBNF)
 |-- GRAMMAR_GUIDE.md          # How to read the grammar notation
 |-- syntax_guide.pas          # Full Pascal syntax reference
@@ -421,6 +461,7 @@ Interpreter/
 - [ ] `CONST` declarations
 - [ ] Boolean operators (`AND`, `OR`, `NOT`)
 - [ ] Multi-argument `WRITE`/`WRITELN`
+- [ ] Bytecode VM that executes emitted `.pbc` files
 - [ ] Source-level debugger with stepping and breakpoints
 
 ---
