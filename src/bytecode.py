@@ -149,8 +149,6 @@ class BytecodeVisitor(NodeVisitor):
             self.visit(node.child)
 
         if node.value == PLUS:
-            self.emit("NOP") # No-Op since nothing changes, VM ignores
-            # return childvalue
             return
         elif node.value == MINUS:
             self.emit("NEG")

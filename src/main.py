@@ -7,8 +7,15 @@ from Parser import Parser
 from SemanticAnalyser import SemanticAnalyser
 from interpreter import Interpreter
 from bytecode import BytecodeVisitor
+from vm import VirtualMachine
 
-SCRIPT_SUFFIXES = {".pas", ".txt"}
+SOURCE_SUFFIXES = {".pas", ".txt"}
+BYTECODE_SUFFIXES = {".pbc"}
+ACTIONS_SUFFIXES = {
+    "run": SOURCE_SUFFIXES,
+    "compile": SOURCE_SUFFIXES,
+    "vm": BYTECODE_SUFFIXES,
+}
 ACTION_LABELS = {
     "run": "Running",
     "compile": "Compiling",
@@ -19,24 +26,27 @@ ACTION_LABELS = {
 def execute_path(path_str, action):
     path = Path(path_str)
     handler = ACTION_HANDLERS.get(action)
+    allowed_suffixes = ACTIONS_SUFFIXES.get(action)
 
-    if handler is None:
+    if handler is None or allowed_suffixes is None:
         raise ValueError(f"Unknown action: {action}")
 
     if path.is_file():
-        if path.suffix in SCRIPT_SUFFIXES:
+        if path.suffix in allowed_suffixes:
             handler(path)
             return
-        raise ValueError(f"Unsupported file type: {path.suffix}. Expected .pas or .txt")
+        expected = ", ".join(sorted(allowed_suffixes))
+        raise ValueError(f"Unsupported file type: {path.suffix}. Expected {expected}")
 
     if path.is_dir():
         files = sorted(
             p for p in path.iterdir()
-            if p.is_file() and p.suffix in SCRIPT_SUFFIXES
+            if p.is_file() and p.suffix in allowed_suffixes
         )
 
         if not files:
-            print(f"No runnable scripts found in '{path}'")
+            expected = ", ".join(sorted(allowed_suffixes))
+            print(f"No matching {expected} files found in '{path}'")
             return
 
         for file_path in files:
@@ -87,8 +97,12 @@ def compile_script(path):
 
 
 def run_vm_script(path):
-    ast = load_program(path)
-    raise NotImplementedError("VM backend not implemented yet")
+    with open(path, "r", encoding="utf-8") as bytecode_file:
+        _bytecode = bytecode_file.read()
+
+    vm = VirtualMachine(_bytecode)
+    vm.execute()
+    
 
 
 ACTION_HANDLERS = {
@@ -103,7 +117,7 @@ def print_help():
     print("  :help / :h           Show this help message")
     print("  :quit / :q           Quit")
     print("  :run <path>          Run a Pascal script file or directory")
-    print("  :vm <path>           Run a Pascal script file or directory in VM using bytecode")
+    print("  :vm <path>           Run a bytecode file or directory (.pbc) in the VM")
     print("  :compile <path>      Emit a Pascal script or directory as bytecode without running it")
     print("  <path>               Run a Pascal script file or directory")
 
