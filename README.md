@@ -1,6 +1,6 @@
 ﻿# Pascal Interpreter
 
-A Pascal-like language project built from scratch in Python with zero external dependencies. It currently combines a shared frontend, a working tree-walking interpreter, and an in-progress bytecode compiler that emits textual `.pbc` files for a future VM backend.
+A Pascal-like language project built from scratch in Python with zero external dependencies. It currently combines a shared frontend, a working tree-walking interpreter, a stack-based bytecode compiler, and a virtual machine that executes emitted `.pbc` files.
 
 ---
 
@@ -21,12 +21,13 @@ It is also meant to be a practical systems-style project rather than just a toy 
 | **Semantic Analysis** | Symbol table with scoped lookups, type checking, duplicate/undeclared variable detection |
 | **Interpreter** | Tree-walking evaluator with scoped variable storage |
 | **Bytecode Compiler** | Stack-based bytecode emitter that writes textual `.pbc` files |
+| **Virtual Machine** | Stack VM with labels, jumps, call frames, scoped variables, arithmetic, comparisons, and I/O |
 | **Type System** | `INTEGER`, `REAL`, `BOOLEAN`, `STRING` with automatic widening (`INTEGER` -> `REAL`) |
 | **Control Flow** | `IF/THEN/ELSE`, `WHILE/DO`, `FOR/TO/DOWNTO` |
 | **Procedures & Functions** | Declaration, parameter passing, recursion, nested scopes |
 | **I/O** | `WRITE` and `WRITELN` statements |
 | **Strings** | String literals, concatenation (`+`), and equality comparison |
-| **CLI Modes** | Run source files, compile source files to bytecode, or target a reserved VM path |
+| **CLI Modes** | Run source files, compile source files to bytecode, or execute `.pbc` files through the VM |
 | **Error Reporting** | Line and column numbers in all error messages (`LexerError`, `ParserError`, `SemanticError`, `InterpreterError`, `BytecodeError`) |
 
 ---
@@ -60,7 +61,17 @@ script> :compile instructions/triangle.pas
 Wrote bytecode to instructions/triangle.pbc
 ```
 
-Compiled bytecode is written next to the source file using the `.pbc` extension. The `:vm` command path exists in the CLI, but the VM backend itself is not implemented yet.
+Compiled bytecode is written next to the source file using the `.pbc` extension.
+
+### Run Bytecode in the VM
+
+```bash
+python src/main.py
+```
+
+```text
+script> :vm instructions/triangle.pbc
+```
 
 ### Interactive Mode
 
@@ -75,6 +86,7 @@ Alex's PascalInterpreter
 
 script> :run instructions/functions.pas
 script> :compile instructions/triangle.pas
+script> :vm instructions/triangle.pbc
 script> instructions/triangle.pas
 script> :help
 script> :q
@@ -106,6 +118,7 @@ flowchart LR
         direction LR
         E["Interpreter<br/>output"]
         G["Bytecode Compiler<br/><code>.pbc</code>"]
+        H["Virtual Machine<br/>output"]
     end
 
     A --> B
@@ -113,6 +126,7 @@ flowchart LR
     C --> D
     D --> E
     D --> G
+    G --> H
 
     classDef source fill:#1f2937,stroke:#94a3b8,stroke-width:1.5px,color:#f8fafc;
     classDef front fill:#111827,stroke:#64748b,stroke-width:1.5px,color:#e5e7eb;
@@ -123,7 +137,7 @@ flowchart LR
     class A source;
     class B,C front;
     class D middle;
-    class E,G runtime;
+    class E,G,H runtime;
     class F,S,R group;
 
 ```
@@ -137,7 +151,8 @@ Each stage is cleanly separated into its own module:
 | **AST Nodes** | [`src/nodes.py`](src/nodes.py) | Defines all AST node classes (`Program`, `Block`, `BinaryOperation`, `If`, `While`, `For`, etc.) |
 | **Semantic Analysis** | [`src/SemanticAnalyser.py`](src/SemanticAnalyser.py) | Populates symbol tables, enforces type rules, validates declarations |
 | **Interpretation** | [`src/interpreter.py`](src/interpreter.py) | Tree-walking evaluator that executes the validated AST |
-| **Bytecode Emission** | [`src/bytecode.py`](src/bytecode.py) | Emits stack-based textual bytecode for the future VM backend |
+| **Bytecode Emission** | [`src/bytecode.py`](src/bytecode.py) | Emits stack-based textual bytecode |
+| **Virtual Machine** | [`src/vm.py`](src/vm.py) | Executes `.pbc` bytecode with a stack, labels, jumps, and call frames |
 | **Visitor Base** | [`src/visitor.py`](src/visitor.py) | Generic visitor pattern base class used by both the analyser and interpreter |
 | **Tokens & Symbols** | [`src/tokens.py`](src/tokens.py) | Token definitions, symbol classes, symbol table, and custom exception types |
 | **Entry Point** | [`src/main.py`](src/main.py) | CLI runner with interactive REPL, file/directory execution, and bytecode compilation |
@@ -146,7 +161,7 @@ Today that means:
 
 - `:run <path>` executes Pascal source through the interpreter
 - `:compile <path>` emits `.pbc` bytecode files alongside the source
-- `:vm <path>` is wired into the CLI but currently raises `NotImplementedError`
+- `:vm <path>` executes `.pbc` files through the VM
 
 ---
 
@@ -417,7 +432,7 @@ Error types:
 | `ParserError` | Parsing | Unexpected tokens, missing delimiters |
 | `SemanticError` | Semantic analysis | Type mismatches, undeclared variables, duplicate declarations |
 | `InterpreterError` | Runtime | Division by zero, undefined variables at runtime |
-| `BytecodeError` | Bytecode emission | Unsupported constructs or invalid bytecode-generation state |
+| `BytecodeError` | Bytecode / VM runtime | Unsupported bytecode, stack underflow, missing labels, missing variables, division by zero |
 
 ---
 
@@ -433,6 +448,7 @@ Interpreter/
 |   |-- SemanticAnalyser.py   # Type checking and symbol table logic
 |   |-- interpreter.py        # Tree-walking runtime evaluator
 |   |-- bytecode.py           # Stack-based bytecode emitter (.pbc output)
+|   |-- vm.py                 # Stack VM for executing emitted bytecode
 |   |-- visitor.py            # Generic visitor pattern base
 |   `-- tokens.py             # Token types, symbols, and exceptions
 |-- instructions/
@@ -461,7 +477,8 @@ Interpreter/
 - [ ] `CONST` declarations
 - [ ] Boolean operators (`AND`, `OR`, `NOT`)
 - [ ] Multi-argument `WRITE`/`WRITELN`
-- [ ] Bytecode VM that executes emitted `.pbc` files
+- [ ] Interpreter-vs-VM output comparison test harness
+- [ ] Optional ARM64 assembly backend
 - [ ] Source-level debugger with stepping and breakpoints
 
 ---

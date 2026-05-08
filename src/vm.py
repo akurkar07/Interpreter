@@ -2,7 +2,6 @@ import shlex
 
 from tokens import BytecodeError
 
-
 INSTRUCTION_SET = [
     "JMP",
     "JMP_IF_FALSE",
