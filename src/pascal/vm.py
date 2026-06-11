@@ -28,7 +28,7 @@ INSTRUCTION_SET = [
     "LT",
     "LTE",
     "GT",
-    "GTE",
+    "GTE"
 ]
 
 COMPARATOR_OPS = {
