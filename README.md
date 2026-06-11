@@ -1,4 +1,4 @@
-﻿# Pascal Interpreter
+# Pascal Interpreter
 
 A Pascal-like language project built from scratch in Python with zero external dependencies. It currently combines a shared frontend, a working tree-walking interpreter, a stack-based bytecode compiler, and a virtual machine that executes emitted `.pbc` files.
 
@@ -41,13 +41,13 @@ It is also meant to be a practical systems-style project rather than just a toy 
 ### Run a Script
 
 ```bash
-python src/main.py instructions/triangle.pas
+python src/main.py examples/triangle.pas
 ```
 
 ### Run All Scripts in a Directory
 
 ```bash
-python src/main.py instructions/
+python src/main.py examples/
 ```
 
 ### Compile to Bytecode
@@ -57,8 +57,8 @@ python src/main.py
 ```
 
 ```text
-script> :compile instructions/triangle.pas
-Wrote bytecode to instructions/triangle.pbc
+script> :compile examples/triangle.pas
+Wrote bytecode to examples/triangle.pbc
 ```
 
 Compiled bytecode is written next to the source file using the `.pbc` extension.
@@ -70,7 +70,7 @@ python src/main.py
 ```
 
 ```text
-script> :vm instructions/triangle.pbc
+script> :vm examples/triangle.pbc
 ```
 
 ### Interactive Mode
@@ -84,10 +84,10 @@ python src/main.py
 Alex's PascalInterpreter
 ========================
 
-script> :run instructions/functions.pas
-script> :compile instructions/triangle.pas
-script> :vm instructions/triangle.pbc
-script> instructions/triangle.pas
+script> :run examples/functions.pas
+script> :compile examples/triangle.pas
+script> :vm examples/triangle.pbc
+script> examples/triangle.pas
 script> :help
 script> :q
 ```
@@ -146,15 +146,15 @@ Each stage is cleanly separated into its own module:
 
 | Stage | Module | Responsibility |
 |---|---|---|
-| **Lexical Analysis** | [`src/Lexer.py`](src/Lexer.py) | Converts source text into a stream of tokens |
-| **Parsing** | [`src/Parser.py`](src/Parser.py) | Builds an Abstract Syntax Tree from tokens using recursive descent |
-| **AST Nodes** | [`src/nodes.py`](src/nodes.py) | Defines all AST node classes (`Program`, `Block`, `BinaryOperation`, `If`, `While`, `For`, etc.) |
-| **Semantic Analysis** | [`src/SemanticAnalyser.py`](src/SemanticAnalyser.py) | Populates symbol tables, enforces type rules, validates declarations |
-| **Interpretation** | [`src/interpreter.py`](src/interpreter.py) | Tree-walking evaluator that executes the validated AST |
-| **Bytecode Emission** | [`src/bytecode.py`](src/bytecode.py) | Emits stack-based textual bytecode |
-| **Virtual Machine** | [`src/vm.py`](src/vm.py) | Executes `.pbc` bytecode with a stack, labels, jumps, and call frames |
-| **Visitor Base** | [`src/visitor.py`](src/visitor.py) | Generic visitor pattern base class used by both the analyser and interpreter |
-| **Tokens & Symbols** | [`src/tokens.py`](src/tokens.py) | Token definitions, symbol classes, symbol table, and custom exception types |
+| **Lexical Analysis** | [`src/pascal/Lexer.py`](src/pascal/Lexer.py) | Converts source text into a stream of tokens |
+| **Parsing** | [`src/pascal/Parser.py`](src/pascal/Parser.py) | Builds an Abstract Syntax Tree from tokens using recursive descent |
+| **AST Nodes** | [`src/pascal/nodes.py`](src/pascal/nodes.py) | Defines all AST node classes (`Program`, `Block`, `BinaryOperation`, `If`, `While`, `For`, etc.) |
+| **Semantic Analysis** | [`src/pascal/SemanticAnalyser.py`](src/pascal/SemanticAnalyser.py) | Populates symbol tables, enforces type rules, validates declarations |
+| **Interpretation** | [`src/pascal/interpreter.py`](src/pascal/interpreter.py) | Tree-walking evaluator that executes the validated AST |
+| **Bytecode Emission** | [`src/pascal/bytecode.py`](src/pascal/bytecode.py) | Emits stack-based textual bytecode |
+| **Virtual Machine** | [`src/pascal/vm.py`](src/pascal/vm.py) | Executes `.pbc` bytecode with a stack, labels, jumps, and call frames |
+| **Visitor Base** | [`src/pascal/visitor.py`](src/pascal/visitor.py) | Generic visitor pattern base class used by both the analyser and interpreter |
+| **Tokens & Symbols** | [`src/pascal/tokens.py`](src/pascal/tokens.py) | Token definitions, symbol classes, symbol table, and custom exception types |
 | **Entry Point** | [`src/main.py`](src/main.py) | CLI runner with interactive REPL, file/directory execution, and bytecode compilation |
 
 Today that means:
@@ -171,7 +171,7 @@ Today that means:
 
 Recursion, functions, and nested loops:
 
-**[`instructions/triangle.pas`](instructions/triangle.pas)**
+**[`examples/triangle.pas`](examples/triangle.pas)**
 
 ```pascal
 PROGRAM triangle;
@@ -225,7 +225,7 @@ END.
 
 ### Recursive Factorial
 
-**[`instructions/functions.pas`](instructions/functions.pas)**
+**[`examples/functions.pas`](examples/functions.pas)**
 
 ```pascal
 PROGRAM recursion;
@@ -250,7 +250,7 @@ END.
 
 Countdown example:
 
-**[`instructions/recursion.pas`](instructions/recursion.pas)**
+**[`examples/recursion.pas`](examples/recursion.pas)**
 
 ```pascal
 PROGRAM recursion;
@@ -279,7 +279,7 @@ END.
 
 ### Recursive Procedure with String Concatenation
 
-**[`instructions/string_recursion.pas`](instructions/string_recursion.pas)**
+**[`examples/string_recursion.pas`](examples/string_recursion.pas)**
 
 ```pascal
 PROGRAM string_recursion;
@@ -308,18 +308,18 @@ aaaaaa
 
 ### Bytecode Showcase
 
-The repo also includes a larger feature-coverage program and its current emitted bytecode:
+The repo also includes a larger feature-coverage program and can emit bytecode for inspection:
 
-- [`instructions/FeatureShowcase.pas`](instructions/FeatureShowcase.pas)
-- [`instructions/FeatureShowcase.pbc`](instructions/FeatureShowcase.pbc)
-- [`BYTECODE.md`](BYTECODE.md) for the bytecode language design
-- [`PLAN.md`](PLAN.md) for the current compiler / VM roadmap
+- [`examples/FeatureShowcase.pas`](examples/FeatureShowcase.pas)
+- `examples/FeatureShowcase.pbc`, generated by `:compile examples/FeatureShowcase.pas`
+- [`BYTECODE.md`](docs/BYTECODE.md) for the bytecode language design
+- [`PLAN.md`](docs/PLAN.md) for the current compiler / VM roadmap
 
 ---
 
 ## Grammar
 
-The language is defined by a formal BNF/EBNF grammar. See [`grammar.txt`](grammar.txt) for the full specification and [`GRAMMAR_GUIDE.md`](GRAMMAR_GUIDE.md) for a guide on reading the notation.
+The language is defined by a formal BNF/EBNF grammar. See [`grammar.txt`](docs/grammar.txt) for the full specification and [`GRAMMAR_GUIDE.md`](docs/GRAMMAR_GUIDE.md) for a guide on reading the notation.
 
 <details>
 <summary><strong>Click to expand full grammar</strong></summary>
@@ -441,28 +441,34 @@ Error types:
 ```text
 Interpreter/
 |-- src/
-|   |-- main.py               # CLI entry point and interactive REPL
-|   |-- Lexer.py              # Lexical analyser (tokeniser)
-|   |-- Parser.py             # Recursive-descent parser -> AST
-|   |-- nodes.py              # AST node class definitions
-|   |-- SemanticAnalyser.py   # Type checking and symbol table logic
-|   |-- interpreter.py        # Tree-walking runtime evaluator
-|   |-- bytecode.py           # Stack-based bytecode emitter (.pbc output)
-|   |-- vm.py                 # Stack VM for executing emitted bytecode
-|   |-- visitor.py            # Generic visitor pattern base
-|   `-- tokens.py             # Token types, symbols, and exceptions
-|-- instructions/
+|   |-- main.py               # Compatibility CLI wrapper
+|   `-- pascal/
+|       |-- main.py           # CLI entry point and interactive REPL
+|       |-- Lexer.py          # Lexical analyser (tokeniser)
+|       |-- Parser.py         # Recursive-descent parser -> AST
+|       |-- nodes.py          # AST node class definitions
+|       |-- SemanticAnalyser.py
+|       |-- interpreter.py    # Tree-walking runtime evaluator
+|       |-- bytecode.py       # Stack-based bytecode emitter (.pbc output)
+|       |-- vm.py             # Python stack VM for emitted bytecode
+|       |-- visitor.py
+|       `-- tokens.py
+|-- native/
+|   `-- vm.c                  # C VM prototype
+|-- build/                    # Generated native build outputs
+|-- examples/
 |   |-- FeatureShowcase.pas   # Large feature-coverage example program
-|   |-- FeatureShowcase.pbc   # Emitted bytecode output for inspection
 |   |-- triangle.pas          # Pascal's Triangle demo
 |   |-- functions.pas         # Recursive factorial
 |   |-- recursion.pas         # Recursive procedure
 |   `-- string_recursion.pas  # String concatenation with recursion
-|-- BYTECODE.md               # Bytecode language structure and instruction design
-|-- PLAN.md                   # Ongoing compiler / VM implementation notes
-|-- grammar.txt               # Formal language grammar (EBNF)
-|-- GRAMMAR_GUIDE.md          # How to read the grammar notation
-|-- syntax_guide.pas          # Full Pascal syntax reference
+|-- docs/
+|   |-- BYTECODE.md           # Bytecode language structure and instruction design
+|   |-- PLAN.md               # Ongoing compiler / VM implementation notes
+|   |-- grammar.txt           # Formal language grammar (EBNF)
+|   |-- GRAMMAR_GUIDE.md      # How to read the grammar notation
+|   `-- syntax_guide.pas      # Full Pascal syntax reference
+|-- Makefile                  # C VM build commands
 `-- README.md
 ```
 

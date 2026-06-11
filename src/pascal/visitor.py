@@ -1,4 +1,4 @@
-from nodes import *
+from .nodes import *
 
 
 class NodeVisitor():

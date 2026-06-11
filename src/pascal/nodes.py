@@ -1,4 +1,4 @@
-from tokens import *
+from .tokens import *
 
 class Node():
     "A node is anything in the grammar that is capitalised"

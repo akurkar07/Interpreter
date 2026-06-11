@@ -15,3 +15,8 @@ TODO
 
 # bytecode
 *.pbc
+
+# C build outputs
+build/
+*.exe
+*.o

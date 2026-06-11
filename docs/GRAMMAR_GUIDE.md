@@ -4,9 +4,9 @@ This project uses a simple BNF/EBNF-style grammar to describe the Pascal-like la
 
 Related files:
 
-- [Project README](README.md)
+- [Project README](../README.md)
 - [Grammar reference](grammar.txt)
-- [Parser implementation](src/Parser.py)
+- [Parser implementation](../src/pascal/Parser.py)
 
 ## Basic Rule Shape
 
@@ -123,7 +123,7 @@ not:
 
 The grammar describes what the language should look like.
 
-The parser methods in [`src/Parser.py`](src/Parser.py) are the implementation of those rules. For example:
+The parser methods in [`src/pascal/Parser.py`](../src/pascal/Parser.py) are the implementation of those rules. For example:
 
 - `expression(...)` implements the `expression` rule
 - `arithmetic_expr(...)` implements the `arithmetic_expr` rule

@@ -1,5 +1,5 @@
-from tokens import *
-from visitor import NodeVisitor
+from .tokens import *
+from .visitor import NodeVisitor
 
 
 class BytecodeVisitor(NodeVisitor):
