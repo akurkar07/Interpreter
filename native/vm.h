@@ -43,6 +43,13 @@ typedef struct {
     // frames
 } VM;
 
+typedef Value (*BinaryValueFn)(Value left, Value right);
+
+typedef struct {
+    const char *opcode;
+    BinaryValueFn fn;
+} BinaryOperation;
+
 static const char *INSTRUCTION_SET[] = {
     "JMP",
     "JMP_IF_FALSE",
@@ -107,6 +114,25 @@ static const int COMPARATOR_OPS_COUNT = sizeof(COMPARATOR_OPS) / sizeof(COMPARAT
 char *copy_string(const char *text);
 bool strinlist(const char *str, const char *strlist[], int count);
 void load_instructions(VM *vm, FILE *fp);
+Value parse_instruction(char *opcode, char *operand);
+Value pop_value(VM *vm);
+void push_value(VM *vm, Value value);
+Value make_int(int value);
+Value make_real(double value);
+Value make_bool(bool value);
+double value_as_number(Value value);
+Value add_values(Value left, Value right);
+Value sub_values(Value left, Value right);
+Value mul_values(Value left, Value right);
+Value div_values(Value left, Value right);
+Value idiv_values(Value left, Value right);
+Value eq_values(Value left, Value right);
+Value neq_values(Value left, Value right);
+Value lt_values(Value left, Value right);
+Value lte_values(Value left, Value right);
+Value gt_values(Value left, Value right);
+Value gte_values(Value left, Value right);
+BinaryValueFn find_binary_operation(const char *opcode, const BinaryOperation operations[], int count);
 void execute(VM *vm);
 
 #endif

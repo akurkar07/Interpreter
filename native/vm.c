@@ -53,12 +53,63 @@ void load_instructions(VM *vm, FILE *fp) {
     }
 }
 
+Value parse_instruction(Instruction instruction)
+{
+    char *opcode = instruction.opcode;
+    char *operand = instruction.operand;
+    Value value;
+    if (strcmp(opcode, "PUSH_INT") == 0)
+    {
+        value.type = VAL_INT;
+        value.as.integer = strtol(operand, NULL, 10);
+    }
+    if (strcmp(opcode, "PUSH_REAL") == 0)
+    {
+        value.type = VAL_REAL;
+        value.as.real = strtod(operand, NULL);
+    }
+    if (strcmp(opcode, "PUSH_BOOL") == 0)
+    {
+        value.type = VAL_BOOL;
+        value.as.boolean = strcmp(operand, "TRUE") == 0;
+    }
+    if (strcmp(opcode, "PUSH_STR") == 0)
+    {
+        value.type = VAL_STRING;
+        value.as.string = operand;
+    }
+    return value;
+}
+
+Value pop_value(VM *vm)
+{
+    if (vm->stack_count <= 0) 
+    {
+        fprintf(stderr, "Error: Stack Underflow");
+        exit(1);
+    }
+    vm->stack_count--;
+    return vm->stack[vm->stack_count];
+}
+
+void push_value(VM *vm, Value value)
+{
+    if (vm->stack_count >= VM_STACK_MAX)
+    {
+        fprintf(stderr, "Error: Stack Overflow");
+        exit(1);
+    }
+    vm->stack[vm->stack_count] = value;
+    vm->stack_count++;
+}
+
 void execute(VM *vm)
 {
     while (vm->pc < vm->instruction_count)
     {
-        char *opcode = vm->instructions[vm->pc].opcode;
-        char *operand = vm->instructions[vm->pc].operand;
+        Instruction instruction = vm->instructions[vm->pc];
+        char *opcode = instruction.opcode;
+        char *operand = instruction.operand;
 
         if (!strinlist(opcode, INSTRUCTION_SET, INSTRUCTION_SET_COUNT))
         {
@@ -74,8 +125,8 @@ void execute(VM *vm)
 
         if (strinlist(opcode, PUSH_OPS, PUSH_OPS_COUNT))
         {
-            // TODO: parse operand and push Value onto vm->stack.
-            (void)operand;
+            Value value = parse_instruction(instruction);
+            push_value(vm, value);
             vm->pc++;
             continue;
         }
@@ -83,7 +134,7 @@ void execute(VM *vm)
         if (strcmp(opcode, "LOAD") == 0)
         {
             // TODO: self.stack.append(self.load_name(operand))
-            (void)operand;
+            push_value(vm, );
             vm->pc++;
             continue;
         }
@@ -98,14 +149,18 @@ void execute(VM *vm)
 
         if (strinlist(opcode, ARITHMETIC_OPS, ARITHMETIC_OPS_COUNT))
         {
-            // TODO: pop right, pop left, apply arithmetic op, push result.
+            Value right = pop_value(vm);
+            Value left = pop_value(vm);
+            push_value(vm, result);
             vm->pc++;
             continue;
         }
 
         if (strinlist(opcode, COMPARATOR_OPS, COMPARATOR_OPS_COUNT))
         {
-            // TODO: pop right, pop left, compare, push boolean result.
+            Value right = pop_value(vm);
+            Value left = pop_value(vm);
+            push_value(vm, result);
             vm->pc++;
             continue;
         }
@@ -113,6 +168,8 @@ void execute(VM *vm)
         if (strcmp(opcode, "NEG") == 0)
         {
             // TODO: self.stack.append(-self.pop_value())
+            Value value = pop_value(vm);
+            if (value.type == VAL_INT) {}
             vm->pc++;
             continue;
         }
@@ -141,9 +198,11 @@ void execute(VM *vm)
 
         if (strcmp(opcode, "JMP_IF_FALSE") == 0)
         {
-            // TODO: condition = self.pop_value()
-            // TODO: if condition is false, self.jump_to_label(operand)
-            (void)operand;
+            Value condition = pop_value(vm);
+            if (condition.as.boolean == false)
+            {
+                // self.jump_to_label(operand)
+            }
             vm->pc++;
             continue;
         }
