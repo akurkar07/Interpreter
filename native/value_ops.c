@@ -55,8 +55,26 @@ double value_as_number(Value value)
 
 Value add_values(Value left, Value right)
 {
+    if (left.type == VAL_STRING && right.type == VAL_STRING) {
+        size_t left_length = strlen(left.as.string);
+        size_t right_length = strlen(right.as.string);
+        char *joined = malloc(left_length + right_length + 1);
+
+        if (joined == NULL) {
+            runtime_error("out of memory while concatenating strings");
+        }
+
+        memcpy(joined, left.as.string, left_length);
+        memcpy(joined + left_length, right.as.string, right_length + 1);
+
+        Value result;
+        result.type = VAL_STRING;
+        result.as.string = joined;
+        return result;
+    }
+
     if (!is_number(left) || !is_number(right)) {
-        runtime_error("ADD expects two numbers");
+        runtime_error("ADD expects two numbers or two strings");
     }
 
     if (has_real_operand(left, right)) {

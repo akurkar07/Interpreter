@@ -1,18 +1,9 @@
 #include "vm.h"
 #include "value_ops.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-char *copy_string(const char *text) {
-    size_t length = strlen(text) + 1;
-    char *copy = malloc(length);
-    if (copy == NULL) {
-        return NULL;
-    }
-    memcpy(copy, text, length);
-    return copy;
-}
 
 int strinlist(const char *str, const char *strlist[], int count)
 {
@@ -26,6 +17,26 @@ static void runtime_error(const char *message)
 {
     fprintf(stderr, "Error: %s\n", message);
     exit(1);
+}
+
+void init_vm(VM *vm)
+{
+    vm->pc = 0;
+    vm->stack_count = 0;
+    vm->instruction_count = 0;
+    vm->label_count = 0;
+
+    vm->frame_count = 1;
+    vm->frames[0].return_pc = -1;
+    vm->frames[0].local_count = 0;
+}
+
+void free_vm(VM *vm)
+{
+    for (int i = 0; i < vm->instruction_count; i++) {
+        free(vm->instructions[i].opcode);
+        free(vm->instructions[i].operand);
+    }
 }
 
 static void print_value(Value value)
@@ -119,50 +130,6 @@ void store_name(VM *vm, char *name, Value value)
     frame->locals[frame->local_count].name = name;
     frame->locals[frame->local_count].value = value;
     frame->local_count++;
-}
-
-void load_instructions(VM *vm, FILE *fp) {
-    char line[256];
-    while (fgets(line, 256, fp))
-    {
-        Instruction instruction;
-        char *opcode = strtok(line, " \t\n");
-        char *operand = strtok(NULL, " \t\n");
-
-        if (opcode == NULL) continue;
-
-        if (vm->instruction_count >= VM_INSTRUCTION_MAX) {
-            fprintf(stderr, "Error: too many instructions\n");
-            exit(1);
-        }
-
-        instruction.opcode = copy_string(opcode);
-
-        if (operand != NULL) instruction.operand = copy_string(operand);
-        else instruction.operand = NULL;
-
-        if (instruction.opcode == NULL || (operand != NULL && instruction.operand == NULL)) {
-            fprintf(stderr, "Error: out of memory while loading instructions\n");
-            free(instruction.opcode);
-            free(instruction.operand);
-            exit(1);
-        }
-
-        vm->instructions[vm->instruction_count] = instruction;
-
-        if (strcmp(instruction.opcode, "LABEL") == 0 && instruction.operand != NULL) {
-            if (vm->label_count >= VM_LABEL_MAX) {
-                fprintf(stderr, "Error: too many labels\n");
-                exit(1);
-            }
-
-            vm->labels[vm->label_count].name = instruction.operand;
-            vm->labels[vm->label_count].instruction_index = vm->instruction_count;
-            vm->label_count++;
-        }
-
-        vm->instruction_count++;
-    }
 }
 
 Value parse_instruction(Instruction instruction)
@@ -356,50 +323,4 @@ void execute(VM *vm)
             continue;
         }
     }
-}
-
-int main(int argc, char **argv) {
-
-    if (argc != 2)
-    {
-        fprintf(stderr, "Error: Incorrect number of arguments\n");
-        return 1;
-    }
-
-    FILE *bytecode_file = fopen(argv[1],"r");
-    if (!bytecode_file)
-    {
-        fprintf(stderr, "Error: Could not open bytecode file '%s'\n", argv[1]);
-        return 1;
-    }
-
-    VM *vm = malloc(sizeof(VM));
-    if (vm == NULL)
-    {
-        fprintf(stderr, "Error: out of memory while creating VM\n");
-        fclose(bytecode_file);
-        return 1;
-    }
-
-    vm->pc = 0;
-    vm->stack_count = 0;
-    vm->instruction_count = 0;
-    vm->label_count = 0;
-
-    vm->frame_count = 1; // global frame
-    vm->frames[0].return_pc = -1;
-    vm->frames[0].local_count = 0;
-
-    load_instructions(vm, bytecode_file);
-    fclose(bytecode_file);
-
-    execute(vm);
-
-    for (int i = 0; i < vm->instruction_count; i++)
-    {
-        free(vm->instructions[i].opcode);
-        free(vm->instructions[i].operand);
-    }
-    free(vm);
-    return 0;
 }

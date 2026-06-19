@@ -2,7 +2,6 @@
 #define PASCAL_VM_H
 
 #include <stdbool.h>
-#include <stdio.h>
 
 #define VM_STACK_MAX 1024
 #define VM_INSTRUCTION_MAX 4096
@@ -161,9 +160,9 @@ static const char *COMPARATOR_OPS[] = {
 
 static const int COMPARATOR_OPS_COUNT = sizeof(COMPARATOR_OPS) / sizeof(COMPARATOR_OPS[0]);
 
-char *copy_string(const char *text);
 int strinlist(const char *str, const char *strlist[], int count);
-void load_instructions(VM *vm, FILE *fp);
+void init_vm(VM *vm);
+void free_vm(VM *vm);
 Value parse_instruction(Instruction instruction);
 Value pop_value(VM *vm);
 void push_value(VM *vm, Value value);
