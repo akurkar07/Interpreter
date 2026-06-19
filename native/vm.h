@@ -6,11 +6,9 @@
 
 #define VM_STACK_MAX 1024
 #define VM_INSTRUCTION_MAX 4096
-
-typedef struct {
-    char *opcode;
-    char *operand;
-} Instruction;
+#define VM_LABEL_MAX 1024
+#define VM_FRAME_MAX 1024
+#define VM_LOCALS_MAX 1024
 
 typedef enum {
     VAL_INT,
@@ -30,6 +28,27 @@ typedef struct {
 } Value;
 
 typedef struct {
+    char *opcode;
+    char *operand;
+} Instruction;
+
+typedef struct {
+    char *name;
+    int instruction_index;
+} Label;
+
+typedef struct {
+    char *name;
+    Value value;
+} Local;
+
+typedef struct {
+    Local locals[VM_LOCALS_MAX];
+    int local_count;
+    int return_pc;
+} Frame;
+
+typedef struct {
     int pc;
 
     Value stack[VM_STACK_MAX];
@@ -38,9 +57,11 @@ typedef struct {
     Instruction instructions[VM_INSTRUCTION_MAX];
     int instruction_count;
 
-    // later:
-    // labels
-    // frames
+    Label labels[VM_LABEL_MAX];
+    int label_count;
+
+    Frame frames[VM_FRAME_MAX];
+    int frame_count;
 } VM;
 
 typedef Value (*BinaryValueFn)(Value left, Value right);
@@ -49,6 +70,35 @@ typedef struct {
     const char *opcode;
     BinaryValueFn fn;
 } BinaryOperation;
+
+typedef enum {
+    OP_JMP,
+    OP_JMP_IF_FALSE,
+    OP_LABEL,
+    OP_HALT,
+    OP_CALL,
+    OP_RET,
+    OP_LOAD,
+    OP_STORE,
+    OP_PUSH_INT,
+    OP_PUSH_REAL,
+    OP_PUSH_BOOL,
+    OP_PUSH_STR,
+    OP_WRITE,
+    OP_WRITELN,
+    OP_NEG,
+    OP_ADD,
+    OP_SUB,
+    OP_MUL,
+    OP_DIV,
+    OP_IDIV,
+    OP_EQ,
+    OP_NEQ,
+    OP_LT,
+    OP_LTE,
+    OP_GT,
+    OP_GTE
+} Opcode;
 
 static const char *INSTRUCTION_SET[] = {
     "JMP",
@@ -112,27 +162,11 @@ static const char *COMPARATOR_OPS[] = {
 static const int COMPARATOR_OPS_COUNT = sizeof(COMPARATOR_OPS) / sizeof(COMPARATOR_OPS[0]);
 
 char *copy_string(const char *text);
-bool strinlist(const char *str, const char *strlist[], int count);
+int strinlist(const char *str, const char *strlist[], int count);
 void load_instructions(VM *vm, FILE *fp);
-Value parse_instruction(char *opcode, char *operand);
+Value parse_instruction(Instruction instruction);
 Value pop_value(VM *vm);
 void push_value(VM *vm, Value value);
-Value make_int(int value);
-Value make_real(double value);
-Value make_bool(bool value);
-double value_as_number(Value value);
-Value add_values(Value left, Value right);
-Value sub_values(Value left, Value right);
-Value mul_values(Value left, Value right);
-Value div_values(Value left, Value right);
-Value idiv_values(Value left, Value right);
-Value eq_values(Value left, Value right);
-Value neq_values(Value left, Value right);
-Value lt_values(Value left, Value right);
-Value lte_values(Value left, Value right);
-Value gt_values(Value left, Value right);
-Value gte_values(Value left, Value right);
-BinaryValueFn find_binary_operation(const char *opcode, const BinaryOperation operations[], int count);
 void execute(VM *vm);
 
 #endif

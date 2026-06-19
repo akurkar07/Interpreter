@@ -3,8 +3,8 @@ CFLAGS ?= -Wall -Wextra -std=c11 -g
 
 BUILD_DIR := build
 TARGET := $(BUILD_DIR)/vm.exe
-SRC := native/vm.c
-OBJ := $(BUILD_DIR)/vm.o
+SRC := native/vm.c native/value_ops.c
+OBJ := $(patsubst native/%.c,$(BUILD_DIR)/%.o,$(SRC))
 PBC ?= examples\FeatureShowcase.pbc
 
 .PHONY: all run clean
