@@ -189,8 +189,11 @@ class SemanticAnalyser(NodeVisitor):
             GREATER_EQUAL,
         )
 
-        if node.value in (PLUS,EQUAL, NOT_EQUAL) and left_type == right_type == self.string_type: # handles string concat
-            return self.string_type if node.value == PLUS else self.boolean_type
+        if left_type == right_type == self.string_type: # allows string concat
+            if node.value == PLUS:
+                return self.string_type
+            if node.value in comparison_ops:
+                return self.boolean_type
 
         if node.value in arithmetic_ops:
             if not (self._is_numeric(left_type) and self._is_numeric(right_type)):

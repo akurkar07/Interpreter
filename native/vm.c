@@ -49,7 +49,7 @@ static void print_value(Value value)
         printf("%g", value.as.real);
         break;
     case VAL_BOOL:
-        printf("%s", value.as.boolean ? "TRUE" : "FALSE");
+        printf("%s", value.as.boolean ? "True" : "False");
         break;
     case VAL_STRING:
         printf("%s", value.as.string);
