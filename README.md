@@ -73,6 +73,21 @@ python src/main.py
 script> :vm examples/triangle.pbc
 ```
 
+### Native C VM
+
+```bash
+make            # builds build/vm (build/vm.exe on Windows); needs gcc and make
+./build/vm examples/triangle.pbc
+```
+
+### Test
+
+```bash
+make test
+```
+
+`tests/differential.py` compiles every program in `examples/` and runs it on all three backends: the tree-walking interpreter, the Python stack VM, and the native C VM. The test fails if any backend's output differs from the interpreter's, or if the C VM crashes. `examples/globals.pas` exists specifically to exercise procedures reading global variables, which the C VM's frame walk once got wrong. The same test runs in CI on Ubuntu and Windows.
+
 ### Interactive Mode
 
 ```bash
@@ -456,6 +471,8 @@ Interpreter/
 |-- native/
 |   `-- vm.c                  # C VM prototype
 |-- build/                    # Generated native build outputs
+|-- tests/
+|   `-- differential.py       # Interpreter vs Python VM vs C VM output comparison
 |-- examples/
 |   |-- FeatureShowcase.pas   # Large feature-coverage example program
 |   |-- triangle.pas          # Pascal's Triangle demo
@@ -483,7 +500,7 @@ Interpreter/
 - [ ] `CONST` declarations
 - [ ] Boolean operators (`AND`, `OR`, `NOT`)
 - [ ] Multi-argument `WRITE`/`WRITELN`
-- [ ] Interpreter-vs-VM output comparison test harness
+- [x] Interpreter-vs-VM output comparison test harness (`make test`)
 - [ ] Optional ARM64 assembly backend
 - [ ] Source-level debugger with stepping and breakpoints
 

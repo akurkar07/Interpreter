@@ -6,9 +6,6 @@ __pycache__/
 .vscode/
 *.code-workspace
 
-# Local test programs
-tests/
-
 # Local development files
 TODO.md
 TODO

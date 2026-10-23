@@ -96,7 +96,7 @@ void jump_to_label(VM *vm, char *target)
 
 Value load_name(VM *vm, char *name) // searches through the frames to find the value attached to a local's name
 {
-    for (int i = vm->frame_count - 1; i >= 0; i++) // searches through each frame
+    for (int i = vm->frame_count - 1; i >= 0; i--) // searches through each frame, innermost first
     {
         Frame frame = vm->frames[i];
         for (int j = 0; j < frame.local_count; j++) // for each local in frame
